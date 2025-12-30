@@ -1,0 +1,13 @@
+{
+  "name": "remoto",
+  "private": true,
+  "workspaces": [
+    "cli",
+    "web"
+  ],
+  "scripts": {
+    "cli": "npm run dev --workspace=cli",
+    "web": "npm run dev --workspace=web",
+    "build": "npm run build --workspaces"
+  }
+}
