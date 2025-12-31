@@ -3,18 +3,22 @@
 import os from 'os';
 import pty from 'node-pty';
 import qrcode from 'qrcode-terminal';
-import Pusher from 'pusher-js';
-import { nanoid } from 'nanoid';
+import WebSocket from 'ws';
 import chalk from 'chalk';
 
 // Configuration
+const WS_SERVER_URL = process.env.REMOTO_WS_URL || 'ws://localhost:8080';
 const WEB_APP_URL = process.env.REMOTO_WEB_URL || 'http://localhost:3000';
-const PUSHER_KEY = process.env.PUSHER_KEY || 'your-pusher-key';
-const PUSHER_CLUSTER = process.env.PUSHER_CLUSTER || 'us2';
+const API_KEY = process.env.REMOTO_API_KEY;
 
-// Generate session credentials
-const sessionId = nanoid(12);
-const sessionToken = nanoid(24);
+// Check for API key
+if (!API_KEY) {
+  console.log(chalk.red('\n  Error: REMOTO_API_KEY environment variable is required\n'));
+  console.log(chalk.dim('  Get your API key from: https://remoto.dev/dashboard/api-keys\n'));
+  console.log(chalk.dim('  Then set it:'));
+  console.log(chalk.cyan('    export REMOTO_API_KEY="your-api-key"\n'));
+  process.exit(1);
+}
 
 // Detect shell
 const shell = process.env.SHELL || (os.platform() === 'win32' ? 'powershell.exe' : 'zsh');
@@ -25,139 +29,170 @@ let rows = process.stdout.rows || 24;
 
 console.clear();
 console.log(chalk.bold.cyan('\n  Remoto - Control your terminal from your phone\n'));
-console.log(chalk.dim('  Scan this QR code with your phone to connect:\n'));
+console.log(chalk.dim('  Connecting to server...\n'));
 
-// Generate connection URL
-const connectionUrl = `${WEB_APP_URL}/session/${sessionId}?token=${sessionToken}`;
+// Connect to WebSocket server
+const wsUrl = `${WS_SERVER_URL}/cli/?apiKey=${encodeURIComponent(API_KEY)}`;
+const ws = new WebSocket(wsUrl);
 
-// Display QR code
-qrcode.generate(connectionUrl, { small: true }, (qr) => {
-  console.log(qr);
-  console.log(chalk.dim(`\n  Or open: ${chalk.underline(connectionUrl)}\n`));
-  console.log(chalk.dim(`  Session ID: ${sessionId}`));
-  console.log(chalk.dim(`  Waiting for connection...\n`));
-  console.log(chalk.dim('─'.repeat(cols)));
-});
-
-// Initialize PTY
-const ptyProcess = pty.spawn(shell, [], {
-  name: 'xterm-256color',
-  cols,
-  rows,
-  cwd: process.cwd(),
-  env: process.env,
-});
-
-// Buffer for output
+let ptyProcess = null;
+let sessionId = null;
+let sessionToken = null;
 let outputBuffer = '';
 let flushTimeout = null;
-let isConnected = false;
 
-// Send output to phone via HTTP API
-async function sendOutput(output, type = 'output') {
+ws.on('open', () => {
+  console.log(chalk.green('  Connected to server\n'));
+});
+
+ws.on('message', (data) => {
   try {
-    await fetch(`${WEB_APP_URL}/api/session/${sessionId}/output`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ output, token: sessionToken, type }),
-    });
+    const message = JSON.parse(data.toString());
+    handleServerMessage(message);
   } catch (err) {
-    // Silently fail - network issues shouldn't break local terminal
+    console.error(chalk.red('  Invalid message from server'));
+  }
+});
+
+ws.on('close', (code, reason) => {
+  console.log(chalk.dim(`\n  Disconnected from server (${code})`));
+  if (reason) {
+    console.log(chalk.dim(`  Reason: ${reason}`));
+  }
+  cleanup();
+});
+
+ws.on('error', (err) => {
+  console.error(chalk.red(`\n  Connection error: ${err.message}`));
+  if (err.message.includes('ECONNREFUSED')) {
+    console.log(chalk.dim('\n  Make sure the Remoto server is running.'));
+  }
+  process.exit(1);
+});
+
+function handleServerMessage(message) {
+  switch (message.type) {
+    case 'session_created':
+      sessionId = message.sessionId;
+      sessionToken = message.sessionToken;
+      showQRCode();
+      startPTY();
+      break;
+
+    case 'phone_connected':
+      console.log(chalk.green(`\n  Phone connected! (${message.phoneCount} device${message.phoneCount > 1 ? 's' : ''})\n`));
+      break;
+
+    case 'phone_disconnected':
+      console.log(chalk.yellow(`\n  Phone disconnected (${message.phoneCount} device${message.phoneCount > 1 ? 's' : ''} remaining)\n`));
+      break;
+
+    case 'input':
+      // Input from phone
+      if (ptyProcess) {
+        ptyProcess.write(message.data);
+      }
+      break;
+
+    case 'resize':
+      // Resize from phone
+      if (ptyProcess && message.cols && message.rows) {
+        ptyProcess.resize(message.cols, message.rows);
+      }
+      break;
+
+    default:
+      console.log(chalk.dim(`  Unknown message: ${message.type}`));
   }
 }
 
-// Initialize Pusher client (for receiving commands from phone)
-const pusher = new Pusher(PUSHER_KEY, {
-  cluster: PUSHER_CLUSTER,
-  forceTLS: true,
-});
+function showQRCode() {
+  const connectionUrl = `${WEB_APP_URL}/session/${sessionId}?token=${sessionToken}`;
 
-// Subscribe to session channel (public channel for simplicity)
-const channel = pusher.subscribe(`session-${sessionId}`);
+  console.log(chalk.dim('  Scan this QR code with your phone to connect:\n'));
 
-channel.bind('pusher:subscription_succeeded', () => {
-  isConnected = true;
-  console.log(chalk.green('  Ready for connection!\n'));
-});
+  qrcode.generate(connectionUrl, { small: true }, (qr) => {
+    console.log(qr);
+    console.log(chalk.dim(`\n  Or open: ${chalk.underline(connectionUrl)}\n`));
+    console.log(chalk.dim(`  Session ID: ${sessionId}`));
+    console.log(chalk.dim(`  Waiting for phone connection...\n`));
+    console.log(chalk.dim('─'.repeat(cols)));
+  });
+}
 
-channel.bind('pusher:subscription_error', (err) => {
-  console.log(chalk.yellow('  Running in offline mode (Pusher not configured)\n'));
-  console.log(chalk.dim('  Set PUSHER_KEY and PUSHER_CLUSTER for remote access.\n'));
-});
+function startPTY() {
+  // Initialize PTY
+  ptyProcess = pty.spawn(shell, [], {
+    name: 'xterm-256color',
+    cols,
+    rows,
+    cwd: process.cwd(),
+    env: process.env,
+  });
 
-// Handle incoming commands from phone
-channel.bind('command', (data) => {
-  if (data.token === sessionToken) {
-    ptyProcess.write(data.command);
-  }
-});
+  // Handle PTY output
+  ptyProcess.onData((data) => {
+    // Write to local terminal
+    process.stdout.write(data);
 
-// Handle resize events from phone
-channel.bind('resize', (data) => {
-  if (data.token === sessionToken && data.cols && data.rows) {
-    cols = data.cols;
-    rows = data.rows;
-    ptyProcess.resize(cols, rows);
-  }
-});
+    // Buffer and send to server
+    outputBuffer += data;
 
-// Handle phone connection
-channel.bind('phone-connected', (data) => {
-  if (data.token === sessionToken) {
-    console.log(chalk.green('\n  Phone connected!\n'));
-  }
-});
-
-// Handle PTY output - batch and send to API
-ptyProcess.onData((data) => {
-  // Also write to local terminal
-  process.stdout.write(data);
-
-  // Buffer output for sending
-  outputBuffer += data;
-
-  // Debounce sending to avoid flooding
-  if (flushTimeout) clearTimeout(flushTimeout);
-  flushTimeout = setTimeout(async () => {
-    if (outputBuffer) {
-      // Chunk large outputs
-      const chunks = chunkString(outputBuffer, 8000);
-      for (const chunk of chunks) {
-        await sendOutput(chunk);
+    if (flushTimeout) clearTimeout(flushTimeout);
+    flushTimeout = setTimeout(() => {
+      if (outputBuffer && ws.readyState === WebSocket.OPEN) {
+        // Chunk large outputs
+        const chunks = chunkString(outputBuffer, 16000);
+        for (const chunk of chunks) {
+          ws.send(JSON.stringify({ type: 'output', data: chunk }));
+        }
+        outputBuffer = '';
       }
-      outputBuffer = '';
+    }, 30);
+  });
+
+  // Handle PTY exit
+  ptyProcess.onExit(({ exitCode }) => {
+    console.log(chalk.dim(`\n  Session ended (exit code: ${exitCode})`));
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: 'exit', code: exitCode }));
+      ws.close();
     }
-  }, 50);
-});
+    process.exit(exitCode);
+  });
 
-// Handle PTY exit
-ptyProcess.onExit(async ({ exitCode }) => {
-  console.log(chalk.dim(`\n  Session ended (exit code: ${exitCode})`));
-  await sendOutput(String(exitCode), 'exit');
-  pusher.disconnect();
-  process.exit(exitCode);
-});
+  // Handle local terminal resize
+  process.stdout.on('resize', () => {
+    cols = process.stdout.columns;
+    rows = process.stdout.rows;
+    if (ptyProcess) {
+      ptyProcess.resize(cols, rows);
+    }
+  });
 
-// Handle terminal resize
-process.stdout.on('resize', () => {
-  const newCols = process.stdout.columns;
-  const newRows = process.stdout.rows;
-  ptyProcess.resize(newCols, newRows);
-});
+  // Handle local input
+  process.stdin.setRawMode(true);
+  process.stdin.resume();
+  process.stdin.on('data', (data) => {
+    if (ptyProcess) {
+      ptyProcess.write(data.toString());
+    }
+  });
+}
 
-// Handle local input (allow both local and remote control)
-process.stdin.setRawMode(true);
-process.stdin.resume();
-process.stdin.on('data', (data) => {
-  ptyProcess.write(data.toString());
-});
+function cleanup() {
+  if (ptyProcess) {
+    ptyProcess.kill();
+  }
+  if (ws.readyState === WebSocket.OPEN) {
+    ws.close();
+  }
+  process.exit();
+}
 
 // Cleanup on exit
-process.on('SIGINT', () => {
-  ptyProcess.kill();
-  pusher.disconnect();
-  process.exit();
-});
+process.on('SIGINT', cleanup);
+process.on('SIGTERM', cleanup);
 
 // Helper to chunk strings
 function chunkString(str, size) {

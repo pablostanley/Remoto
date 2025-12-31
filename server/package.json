@@ -1,0 +1,16 @@
+{
+  "name": "@remoto/server",
+  "version": "0.1.0",
+  "description": "Remoto WebSocket relay server",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "node --watch src/index.js",
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.0",
+    "@supabase/supabase-js": "^2.47.12",
+    "nanoid": "^5.0.4"
+  }
+}

@@ -1,13 +1,13 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
-import dynamic from 'next/dynamic';
-import { getPusherClient, disconnectPusher } from '@/lib/pusher';
-import type { Channel } from 'pusher-js';
+import nextDynamic from 'next/dynamic';
 
 // Dynamic import to avoid SSR issues with xterm
-const Terminal = dynamic(() => import('@/components/Terminal'), {
+const Terminal = nextDynamic(() => import('@/components/Terminal'), {
   ssr: false,
   loading: () => (
     <div className="flex items-center justify-center h-full">
@@ -26,41 +26,28 @@ export default function SessionPage() {
 
   const [status, setStatus] = useState<ConnectionStatus>('connecting');
   const [errorMessage, setErrorMessage] = useState<string>('');
-  const channelRef = useRef<Channel | null>(null);
+  const wsRef = useRef<WebSocket | null>(null);
   const terminalRef = useRef<HTMLDivElement>(null);
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Send command to terminal via HTTP API
+  // Send command to terminal
   const sendCommand = useCallback(
-    async (data: string) => {
-      if (!token || !sessionId) return;
-      try {
-        await fetch(`/api/session/${sessionId}/command`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ command: data, token }),
-        });
-      } catch (err) {
-        console.error('Failed to send command:', err);
+    (data: string) => {
+      if (wsRef.current?.readyState === WebSocket.OPEN) {
+        wsRef.current.send(JSON.stringify({ type: 'input', data }));
       }
     },
-    [sessionId, token]
+    []
   );
 
-  // Send resize event via HTTP API
+  // Send resize event
   const sendResize = useCallback(
-    async (cols: number, rows: number) => {
-      if (!token || !sessionId) return;
-      try {
-        await fetch(`/api/session/${sessionId}/command`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ command: '', token, type: 'resize', cols, rows }),
-        });
-      } catch (err) {
-        console.error('Failed to send resize:', err);
+    (cols: number, rows: number) => {
+      if (wsRef.current?.readyState === WebSocket.OPEN) {
+        wsRef.current.send(JSON.stringify({ type: 'resize', cols, rows }));
       }
     },
-    [sessionId, token]
+    []
   );
 
   useEffect(() => {
@@ -70,64 +57,103 @@ export default function SessionPage() {
       return;
     }
 
-    const pusher = getPusherClient();
-    // Use public channel (no auth required)
-    const channelName = `session-${sessionId}`;
-    const channel = pusher.subscribe(channelName);
-    channelRef.current = channel;
+    const connect = () => {
+      const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8080';
+      const ws = new WebSocket(`${wsUrl}/phone/${sessionId}?token=${encodeURIComponent(token)}`);
+      wsRef.current = ws;
 
-    channel.bind('pusher:subscription_succeeded', async () => {
-      setStatus('connected');
+      ws.onopen = () => {
+        setStatus('connected');
+        // Request notification permission
+        if ('Notification' in window && Notification.permission === 'default') {
+          Notification.requestPermission();
+        }
+      };
 
-      // Notify CLI that phone connected
-      try {
-        await fetch(`/api/session/${sessionId}/command`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token, type: 'phone-connected' }),
-        });
-      } catch (err) {
-        // Ignore errors
-      }
+      ws.onmessage = (event) => {
+        try {
+          const message = JSON.parse(event.data);
+          handleMessage(message);
+        } catch (err) {
+          console.error('Invalid message:', err);
+        }
+      };
 
-      // Request notification permission
-      if ('Notification' in window && Notification.permission === 'default') {
-        Notification.requestPermission();
-      }
-    });
+      ws.onclose = (event) => {
+        console.log('WebSocket closed:', event.code, event.reason);
 
-    channel.bind('pusher:subscription_error', (err: any) => {
-      console.error('Subscription error:', err);
-      setStatus('error');
-      setErrorMessage('Failed to connect. The session may have expired.');
-    });
+        if (event.code === 4003) {
+          setStatus('error');
+          setErrorMessage('Session not found. It may have expired.');
+        } else if (event.code === 4002) {
+          setStatus('error');
+          setErrorMessage('Invalid session token.');
+        } else if (event.code === 1000) {
+          setStatus('disconnected');
+        } else {
+          // Try to reconnect
+          setStatus('connecting');
+          reconnectTimeoutRef.current = setTimeout(connect, 2000);
+        }
+      };
 
-    // Handle terminal output from CLI
-    channel.bind('output', (data: { output: string }) => {
-      const terminalEl = terminalRef.current;
-      if (terminalEl && (terminalEl as any).terminalWrite) {
-        (terminalEl as any).terminalWrite(data.output);
-      }
-    });
+      ws.onerror = (err) => {
+        console.error('WebSocket error:', err);
+      };
+    };
 
-    // Handle session end
-    channel.bind('exit', (data: { output: string }) => {
-      setStatus('disconnected');
-      // Send notification
-      if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification('Remoto', {
-          body: `Session ended (exit code: ${data.output})`,
-          icon: '/icon-192.png',
-        });
-      }
-    });
+    connect();
 
     return () => {
-      channel.unbind_all();
-      pusher.unsubscribe(channelName);
-      disconnectPusher();
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
     };
   }, [sessionId, token]);
+
+  const handleMessage = (message: { type: string; data?: string; code?: number }) => {
+    switch (message.type) {
+      case 'output':
+        // Write terminal output
+        const terminalEl = terminalRef.current;
+        if (terminalEl && (terminalEl as any).terminalWrite) {
+          (terminalEl as any).terminalWrite(message.data);
+        }
+        break;
+
+      case 'buffered_output':
+        // Write buffered output (on reconnect)
+        const termEl = terminalRef.current;
+        if (termEl && (termEl as any).terminalWrite) {
+          (termEl as any).terminalWrite(message.data);
+        }
+        break;
+
+      case 'exit':
+        setStatus('disconnected');
+        // Send notification
+        if ('Notification' in window && Notification.permission === 'granted') {
+          new Notification('Remoto', {
+            body: `Session ended (exit code: ${message.code})`,
+            icon: '/icon-192.png',
+          });
+        }
+        break;
+
+      case 'cli_disconnected':
+        setStatus('disconnected');
+        if ('Notification' in window && Notification.permission === 'granted') {
+          new Notification('Remoto', {
+            body: 'Terminal disconnected',
+            icon: '/icon-192.png',
+          });
+        }
+        break;
+    }
+  };
 
   if (status === 'error') {
     return (
@@ -164,7 +190,7 @@ export default function SessionPage() {
   return (
     <main className="flex flex-col h-screen bg-[#0a0a0a]">
       {/* Status bar */}
-      <div className="flex items-center justify-between px-4 py-2 bg-gray-900 border-b border-gray-800">
+      <div className="flex items-center justify-between px-4 py-2 bg-gray-900 border-b border-gray-800 safe-area-inset">
         <div className="flex items-center gap-2">
           <div
             className={`w-2 h-2 rounded-full ${
