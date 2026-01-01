@@ -14,7 +14,7 @@ const API_KEY = process.env.REMOTO_API_KEY;
 // Check for API key
 if (!API_KEY) {
   console.log(chalk.red('\n  Error: REMOTO_API_KEY environment variable is required\n'));
-  console.log(chalk.dim('  Get your API key from: https://remoto.dev/dashboard/api-keys\n'));
+  console.log(chalk.dim('  Get your API key from: https://remoto.sh/dashboard/api-keys\n'));
   console.log(chalk.dim('  Then set it:'));
   console.log(chalk.cyan('    export REMOTO_API_KEY="your-api-key"\n'));
   process.exit(1);
