@@ -104,9 +104,14 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
   // Actually SEND to terminal (Return key behavior)
   const handleSend = () => {
     if (!inputValue.trim()) return;
-    // Send the text + carriage return (actual submit)
-    onData(inputValue + '\r');
+    // Flatten multi-line input to single line, then send with newline
+    const flattenedInput = inputValue.replace(/\n/g, ' ').trim();
+    onData(flattenedInput + '\n');
     setInputValue('');
+    // Reset textarea height
+    if (inputRef.current) {
+      inputRef.current.style.height = 'auto';
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -115,12 +120,14 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    // Enter key = line break in textarea (for multi-line input)
-    // Don't prevent default - let it add newlines naturally
-    // User presses Send button to actually submit
-
     // Handle special terminal keys
-    if (e.key === 'Tab') {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      // Regular Enter = send (like pressing Send button)
+      e.preventDefault();
+      handleSend();
+    } else if (e.key === 'Enter' && e.shiftKey) {
+      // Shift+Enter = line break (let it through)
+    } else if (e.key === 'Tab') {
       e.preventDefault();
       onData('\t');
     } else if (e.key === 'Escape') {
@@ -163,6 +170,10 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
             autoCorrect="off"
             autoComplete="off"
             spellCheck={false}
+            inputMode="text"
+            enterKeyHint="send"
+            data-form-type="other"
+            data-lpignore="true"
             rows={1}
             className="flex-1 bg-transparent text-white font-mono text-sm focus:outline-none placeholder:text-gray-600 resize-none min-h-[24px] max-h-[120px]"
             style={{ height: 'auto', overflow: 'hidden' }}
