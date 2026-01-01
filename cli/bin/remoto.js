@@ -41,11 +41,14 @@ ws.on('open', () => {
 });
 
 ws.on('message', (data) => {
+  const raw = data.toString();
+  console.log(chalk.dim(`  [debug] received: ${raw.substring(0, 100)}`));
   try {
-    const message = JSON.parse(data.toString());
+    const message = JSON.parse(raw);
     handleServerMessage(message);
   } catch (err) {
-    console.error(chalk.red('  invalid message from server'));
+    console.error(chalk.red(`  invalid message from server: ${err.message}`));
+    console.error(chalk.red(`  raw data: ${raw.substring(0, 50)}`));
   }
 });
 

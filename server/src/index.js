@@ -220,8 +220,10 @@ function handlePhoneConnection(ws, url) {
 
   // Handle messages from phone
   ws.on('message', (data) => {
+    console.log(`[Phone] Raw message received:`, data.toString().substring(0, 100));
     try {
       const message = JSON.parse(data.toString());
+      console.log(`[Phone] Parsed message type: ${message.type}`);
       handlePhoneMessage(sessionId, message);
     } catch (err) {
       console.error('[Phone] Invalid message:', err);
@@ -286,13 +288,20 @@ function handleCliMessage(sessionId, message) {
 // Handle messages from phone
 function handlePhoneMessage(sessionId, message) {
   const session = sessions.get(sessionId);
-  if (!session) return;
+  if (!session) {
+    console.log(`[Phone] No session found for: ${sessionId}`);
+    return;
+  }
 
   switch (message.type) {
     case 'input':
       // Forward input to CLI
+      console.log(`[Phone] Forwarding input to CLI: "${message.data}"`);
       if (session.cli.readyState === WebSocket.OPEN) {
         session.cli.send(JSON.stringify({ type: 'input', data: message.data }));
+        console.log(`[Phone] Input sent to CLI`);
+      } else {
+        console.log(`[Phone] CLI not open, state: ${session.cli.readyState}`);
       }
       break;
 
