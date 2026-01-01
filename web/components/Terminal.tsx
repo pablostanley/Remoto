@@ -104,7 +104,7 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (inputValue) {
-      onData(inputValue + '\r');
+      onData(inputValue + '\n');
       setInputValue('');
     }
   };

@@ -93,8 +93,12 @@ function handleServerMessage(message) {
 
     case 'input':
       // Input from phone
+      console.log(chalk.dim(`  [debug] input handler, ptyProcess exists: ${!!ptyProcess}`));
       if (ptyProcess) {
+        console.log(chalk.dim(`  [debug] writing to pty: "${message.data}"`));
         ptyProcess.write(message.data);
+      } else {
+        console.log(chalk.red('  [debug] ptyProcess is null!'));
       }
       break;
 
@@ -130,13 +134,20 @@ function showQRCode() {
 
 function startPTY() {
   // Initialize PTY
-  ptyProcess = pty.spawn(shell, [], {
-    name: 'xterm-256color',
-    cols,
-    rows,
-    cwd: process.cwd(),
-    env: process.env,
-  });
+  console.log(chalk.dim(`  [debug] spawning shell: ${shell}`));
+  try {
+    ptyProcess = pty.spawn(shell, [], {
+      name: 'xterm-256color',
+      cols,
+      rows,
+      cwd: process.cwd(),
+      env: process.env,
+    });
+    console.log(chalk.dim(`  [debug] pty spawned successfully, pid: ${ptyProcess.pid}`));
+  } catch (err) {
+    console.error(chalk.red(`  [debug] pty spawn failed: ${err.message}`));
+    return;
+  }
 
   // Handle PTY output
   ptyProcess.onData((data) => {
