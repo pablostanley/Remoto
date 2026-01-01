@@ -101,20 +101,28 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
     };
   }, [onData, onResize, onReady, write]);
 
-  // Actually SEND to terminal - simulates typing text then pressing Return key
+  // Actually SEND to terminal - simulates typing each character then pressing Return
   const handleSend = () => {
     if (!inputValue.trim()) return;
 
-    // Keep newlines as-is for multi-line messages to Claude
     const text = inputValue;
 
-    // First send the text
-    onData(text);
-
-    // Then after a tiny delay, send Return key (simulates pressing Return after typing)
-    setTimeout(() => {
-      onData('\r');
-    }, 50);
+    // Send each character individually with small delays (like real typing)
+    // This mimics how a real keyboard sends input to the terminal
+    let i = 0;
+    const sendNextChar = () => {
+      if (i < text.length) {
+        onData(text[i]);
+        i++;
+        setTimeout(sendNextChar, 10); // 10ms between characters
+      } else {
+        // After all characters, send Return
+        setTimeout(() => {
+          onData('\r');
+        }, 20);
+      }
+    };
+    sendNextChar();
 
     setInputValue('');
     // Reset textarea height
