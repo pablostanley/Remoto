@@ -1,6 +1,6 @@
 {
-  "name": "@remoto/cli",
-  "version": "0.1.0",
+  "name": "remotosh",
+  "version": "1.0.0",
   "description": "Control your terminal from your phone",
   "type": "module",
   "bin": {
