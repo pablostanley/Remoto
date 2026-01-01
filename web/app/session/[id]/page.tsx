@@ -26,9 +26,10 @@ export default function SessionPage() {
 
   const [status, setStatus] = useState<ConnectionStatus>('connecting');
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [terminalOutput, setTerminalOutput] = useState<string[]>([]);
   const wsRef = useRef<WebSocket | null>(null);
-  const terminalRef = useRef<HTMLDivElement>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const writeToTerminalRef = useRef<((data: string) => void) | null>(null);
 
   // Send command to terminal
   const sendCommand = useCallback(
@@ -118,17 +119,15 @@ export default function SessionPage() {
     switch (message.type) {
       case 'output':
         // Write terminal output
-        const terminalEl = terminalRef.current;
-        if (terminalEl && (terminalEl as any).terminalWrite) {
-          (terminalEl as any).terminalWrite(message.data);
+        if (writeToTerminalRef.current && message.data) {
+          writeToTerminalRef.current(message.data);
         }
         break;
 
       case 'buffered_output':
         // Write buffered output (on reconnect)
-        const termEl = terminalRef.current;
-        if (termEl && (termEl as any).terminalWrite) {
-          (termEl as any).terminalWrite(message.data);
+        if (writeToTerminalRef.current && message.data) {
+          writeToTerminalRef.current(message.data);
         }
         break;
 
@@ -213,13 +212,17 @@ export default function SessionPage() {
       </div>
 
       {/* Terminal */}
-      <div ref={terminalRef} className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden">
         {status === 'connecting' ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-gray-500">Connecting to terminal...</div>
           </div>
         ) : (
-          <Terminal onData={sendCommand} onResize={sendResize} />
+          <Terminal
+            onData={sendCommand}
+            onResize={sendResize}
+            onReady={(write) => { writeToTerminalRef.current = write; }}
+          />
         )}
       </div>
     </main>

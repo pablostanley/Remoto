@@ -9,9 +9,10 @@ import '@xterm/xterm/css/xterm.css';
 interface TerminalProps {
   onData: (data: string) => void;
   onResize: (cols: number, rows: number) => void;
+  onReady?: (write: (data: string) => void) => void;
 }
 
-export default function Terminal({ onData, onResize }: TerminalProps) {
+export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
   const terminalRef = useRef<HTMLDivElement>(null);
   const xtermRef = useRef<XTerm | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
@@ -88,15 +89,17 @@ export default function Terminal({ onData, onResize }: TerminalProps) {
     xtermRef.current = xterm;
     fitAddonRef.current = fitAddon;
 
-    // Expose write method on the DOM element for parent access
-    (terminalRef.current as any).terminalWrite = write;
+    // Notify parent that terminal is ready
+    if (onReady) {
+      onReady(write);
+    }
 
     return () => {
       window.removeEventListener('resize', handleResize);
       xterm.dispose();
       xtermRef.current = null;
     };
-  }, [onData, onResize, write]);
+  }, [onData, onResize, onReady, write]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
