@@ -135,41 +135,39 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full overflow-hidden">
+      {/* Terminal output area */}
       <div
         ref={terminalRef}
-        className="flex-1 overflow-hidden"
+        className="flex-1 min-h-0 overflow-auto"
         onClick={() => inputRef.current?.focus()}
       />
-      {/* Mobile input bar */}
-      <form onSubmit={handleSubmit} className="flex gap-2 p-2 bg-[#1a1a1a] border-t border-gray-800">
-        <input
-          ref={inputRef}
-          type="text"
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Type command..."
-          autoCapitalize="off"
-          autoCorrect="off"
-          autoComplete="off"
-          spellCheck={false}
-          className="flex-1 bg-[#0a0a0a] border border-gray-700 rounded px-3 py-2 text-white font-mono text-sm focus:outline-none focus:border-gray-500"
-        />
-        <button
-          type="button"
-          onClick={() => { onData('\x03'); setInputValue(''); }}
-          className="px-3 py-2 bg-red-900/50 text-red-400 rounded text-sm font-mono hover:bg-red-900/70"
-        >
-          ^C
-        </button>
-        <button
-          type="submit"
-          className="px-4 py-2 bg-gray-700 text-white rounded text-sm hover:bg-gray-600"
-        >
-          Run
-        </button>
-      </form>
+      {/* Fixed input bar at bottom */}
+      <div className="shrink-0 bg-[#0a0a0a] border-t border-gray-800 safe-area-bottom">
+        <form onSubmit={handleSubmit} className="flex items-center gap-2 p-2">
+          <span className="text-green-500 font-mono text-sm pl-1">$</span>
+          <input
+            ref={inputRef}
+            type="text"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="command"
+            autoCapitalize="off"
+            autoCorrect="off"
+            autoComplete="off"
+            spellCheck={false}
+            className="flex-1 bg-transparent text-white font-mono text-sm focus:outline-none"
+          />
+          <button
+            type="button"
+            onClick={() => { onData('\x03'); setInputValue(''); }}
+            className="px-2 py-1 text-red-400 text-xs font-mono"
+          >
+            ^C
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

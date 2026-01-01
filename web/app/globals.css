@@ -54,6 +54,15 @@ body {
   color: var(--muted);
 }
 
+/* Safe area for notched phones */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.safe-area-inset {
+  padding-top: env(safe-area-inset-top, 0);
+}
+
 @layer base {
   :root {
     --background: 0 0% 0%;

@@ -194,9 +194,9 @@ export default function SessionPage() {
   }
 
   return (
-    <main className="flex flex-col h-screen bg-[#0a0a0a]">
+    <main className="flex flex-col h-[100dvh] bg-[#0a0a0a] overflow-hidden">
       {/* Status bar */}
-      <div className="flex items-center justify-between px-4 py-2 bg-gray-900 border-b border-gray-800 safe-area-inset">
+      <div className="shrink-0 flex items-center justify-between px-4 py-2 bg-[#111] border-b border-gray-800">
         <div className="flex items-center gap-2">
           <div
             className={`w-2 h-2 rounded-full ${
@@ -219,7 +219,7 @@ export default function SessionPage() {
       </div>
 
       {/* Terminal */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 min-h-0 overflow-hidden">
         {status === 'connecting' ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-gray-500">Connecting to terminal...</div>
