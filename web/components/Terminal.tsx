@@ -143,27 +143,34 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
       />
       {/* Fixed input bar at bottom */}
       <div className="shrink-0 bg-[#0a0a0a] border-t border-gray-800 safe-area-bottom">
-        <form onSubmit={handleSubmit} className="flex items-center gap-2 p-2">
-          <span className="text-green-500 font-mono text-sm pl-1">$</span>
+        <form onSubmit={handleSubmit} className="flex items-center gap-2 p-3">
+          <span className="text-green-500 font-mono text-sm">$</span>
           <input
             ref={inputRef}
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="command"
+            placeholder="type command..."
             autoCapitalize="off"
             autoCorrect="off"
             autoComplete="off"
             spellCheck={false}
-            className="flex-1 bg-transparent text-white font-mono text-sm focus:outline-none"
+            enterKeyHint="send"
+            className="flex-1 bg-transparent text-white font-mono text-sm focus:outline-none placeholder:text-gray-600"
           />
           <button
             type="button"
             onClick={() => { onData('\x03'); setInputValue(''); }}
-            className="px-2 py-1 text-red-400 text-xs font-mono"
+            className="px-2 py-1 text-red-500 text-xs font-mono font-bold"
           >
             ^C
+          </button>
+          <button
+            type="submit"
+            className="px-3 py-1 bg-white text-black rounded text-sm font-medium"
+          >
+            Send
           </button>
         </form>
       </div>
