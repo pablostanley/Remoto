@@ -16,7 +16,7 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
   const terminalRef = useRef<HTMLDivElement>(null);
   const xtermRef = useRef<XTerm | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const [inputValue, setInputValue] = useState('');
 
   // Expose write function to parent
@@ -101,24 +101,25 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
     };
   }, [onData, onResize, onReady, write]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const text = inputValue + '\r';
-    // Send each character with tiny delay to mimic real typing
-    let i = 0;
-    const sendChar = () => {
-      if (i < text.length) {
-        onData(text[i]);
-        i++;
-        setTimeout(sendChar, 5);
-      }
-    };
-    sendChar();
+  // Actually SEND to terminal (Return key behavior)
+  const handleSend = () => {
+    if (!inputValue.trim()) return;
+    // Send the text + carriage return (actual submit)
+    onData(inputValue + '\r');
     setInputValue('');
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    // Handle special keys
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleSend();
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Enter key = line break in textarea (for multi-line input)
+    // Don't prevent default - let it add newlines naturally
+    // User presses Send button to actually submit
+
+    // Handle special terminal keys
     if (e.key === 'Tab') {
       e.preventDefault();
       onData('\t');
@@ -150,11 +151,10 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
       />
       {/* Fixed input bar at bottom */}
       <div className="shrink-0 bg-[#0a0a0a] border-t border-gray-800 safe-area-bottom">
-        <form onSubmit={handleSubmit} className="flex items-center gap-2 p-3">
-          <span className="text-green-500 font-mono text-sm">$</span>
-          <input
+        <div className="flex items-end gap-2 p-3">
+          <span className="text-green-500 font-mono text-sm pb-2">$</span>
+          <textarea
             ref={inputRef}
-            type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -163,8 +163,14 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
             autoCorrect="off"
             autoComplete="off"
             spellCheck={false}
-            enterKeyHint="send"
-            className="flex-1 bg-transparent text-white font-mono text-sm focus:outline-none placeholder:text-gray-600"
+            rows={1}
+            className="flex-1 bg-transparent text-white font-mono text-sm focus:outline-none placeholder:text-gray-600 resize-none min-h-[24px] max-h-[120px]"
+            style={{ height: 'auto', overflow: 'hidden' }}
+            onInput={(e) => {
+              const target = e.target as HTMLTextAreaElement;
+              target.style.height = 'auto';
+              target.style.height = Math.min(target.scrollHeight, 120) + 'px';
+            }}
           />
           <button
             type="button"
@@ -174,12 +180,13 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
             ^C
           </button>
           <button
-            type="submit"
+            type="button"
+            onClick={handleSend}
             className="px-3 py-1 bg-white text-black rounded text-sm font-medium"
           >
             Send
           </button>
-        </form>
+        </div>
       </div>
     </div>
   );
