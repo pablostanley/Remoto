@@ -101,12 +101,21 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
     };
   }, [onData, onResize, onReady, write]);
 
-  // Actually SEND to terminal (Return key behavior)
+  // Actually SEND to terminal - simulates typing text then pressing Return key
   const handleSend = () => {
     if (!inputValue.trim()) return;
-    // Flatten multi-line input to single line, then send with newline
-    const flattenedInput = inputValue.replace(/\n/g, ' ').trim();
-    onData(flattenedInput + '\n');
+
+    // Keep newlines as-is for multi-line messages to Claude
+    const text = inputValue;
+
+    // First send the text
+    onData(text);
+
+    // Then after a tiny delay, send Return key (simulates pressing Return after typing)
+    setTimeout(() => {
+      onData('\r');
+    }, 50);
+
     setInputValue('');
     // Reset textarea height
     if (inputRef.current) {
@@ -120,14 +129,11 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // iOS keyboard Return = line break (for multi-line messages to Claude)
+    // Only our Send button actually submits
+
     // Handle special terminal keys
-    if (e.key === 'Enter' && !e.shiftKey) {
-      // Regular Enter = send (like pressing Send button)
-      e.preventDefault();
-      handleSend();
-    } else if (e.key === 'Enter' && e.shiftKey) {
-      // Shift+Enter = line break (let it through)
-    } else if (e.key === 'Tab') {
+    if (e.key === 'Tab') {
       e.preventDefault();
       onData('\t');
     } else if (e.key === 'Escape') {
@@ -171,7 +177,7 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
             autoComplete="off"
             spellCheck={false}
             inputMode="text"
-            enterKeyHint="send"
+            enterKeyHint="return"
             data-form-type="other"
             data-lpignore="true"
             rows={1}
