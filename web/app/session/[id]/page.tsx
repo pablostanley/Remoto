@@ -34,8 +34,13 @@ export default function SessionPage() {
   // Send command to terminal
   const sendCommand = useCallback(
     (data: string) => {
+      console.log('[Session] sendCommand called with:', data);
+      console.log('[Session] WebSocket state:', wsRef.current?.readyState, 'OPEN is:', WebSocket.OPEN);
       if (wsRef.current?.readyState === WebSocket.OPEN) {
+        console.log('[Session] Sending to WebSocket:', { type: 'input', data });
         wsRef.current.send(JSON.stringify({ type: 'input', data }));
+      } else {
+        console.log('[Session] WebSocket not open, cannot send');
       }
     },
     []
@@ -72,8 +77,10 @@ export default function SessionPage() {
       };
 
       ws.onmessage = (event) => {
+        console.log('[Session] Received message:', event.data);
         try {
           const message = JSON.parse(event.data);
+          console.log('[Session] Parsed message:', message);
           handleMessage(message);
         } catch (err) {
           console.error('Invalid message:', err);
