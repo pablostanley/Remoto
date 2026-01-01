@@ -7,18 +7,9 @@ import WebSocket from 'ws';
 import chalk from 'chalk';
 
 // Configuration
-const WS_SERVER_URL = process.env.REMOTO_WS_URL || 'ws://localhost:8080';
-const WEB_APP_URL = process.env.REMOTO_WEB_URL || 'http://localhost:3000';
+const WS_SERVER_URL = process.env.REMOTO_WS_URL || 'wss://remoto-ws.fly.dev';
+const WEB_APP_URL = process.env.REMOTO_WEB_URL || 'https://remoto.sh';
 const API_KEY = process.env.REMOTO_API_KEY;
-
-// Check for API key
-if (!API_KEY) {
-  console.log(chalk.red('\n  Error: REMOTO_API_KEY environment variable is required\n'));
-  console.log(chalk.dim('  Get your API key from: https://remoto.sh/dashboard/api-keys\n'));
-  console.log(chalk.dim('  Then set it:'));
-  console.log(chalk.cyan('    export REMOTO_API_KEY="your-api-key"\n'));
-  process.exit(1);
-}
 
 // Detect shell
 const shell = process.env.SHELL || (os.platform() === 'win32' ? 'powershell.exe' : 'zsh');
@@ -28,21 +19,25 @@ let cols = process.stdout.columns || 80;
 let rows = process.stdout.rows || 24;
 
 console.clear();
-console.log(chalk.bold.cyan('\n  Remoto - Control your terminal from your phone\n'));
-console.log(chalk.dim('  Connecting to server...\n'));
+console.log(chalk.bold.white('\n  remoto'));
+console.log(chalk.dim('  control your terminal from your phone\n'));
+console.log(chalk.dim('  connecting...'));
 
-// Connect to WebSocket server
-const wsUrl = `${WS_SERVER_URL}/cli/?apiKey=${encodeURIComponent(API_KEY)}`;
+// Connect to WebSocket server (API key is optional)
+const wsUrl = API_KEY
+  ? `${WS_SERVER_URL}/cli/?apiKey=${encodeURIComponent(API_KEY)}`
+  : `${WS_SERVER_URL}/cli/`;
 const ws = new WebSocket(wsUrl);
 
 let ptyProcess = null;
 let sessionId = null;
 let sessionToken = null;
+let isAnonymous = true;
 let outputBuffer = '';
 let flushTimeout = null;
 
 ws.on('open', () => {
-  console.log(chalk.green('  Connected to server\n'));
+  // Connection established, wait for session_created message
 });
 
 ws.on('message', (data) => {
@@ -50,22 +45,19 @@ ws.on('message', (data) => {
     const message = JSON.parse(data.toString());
     handleServerMessage(message);
   } catch (err) {
-    console.error(chalk.red('  Invalid message from server'));
+    console.error(chalk.red('  invalid message from server'));
   }
 });
 
 ws.on('close', (code, reason) => {
-  console.log(chalk.dim(`\n  Disconnected from server (${code})`));
-  if (reason) {
-    console.log(chalk.dim(`  Reason: ${reason}`));
-  }
+  console.log(chalk.dim(`\n  disconnected (${code})`));
   cleanup();
 });
 
 ws.on('error', (err) => {
-  console.error(chalk.red(`\n  Connection error: ${err.message}`));
+  console.error(chalk.red(`\n  connection error: ${err.message}`));
   if (err.message.includes('ECONNREFUSED')) {
-    console.log(chalk.dim('\n  Make sure the Remoto server is running.'));
+    console.log(chalk.dim('\n  make sure you have internet access'));
   }
   process.exit(1);
 });
@@ -75,16 +67,25 @@ function handleServerMessage(message) {
     case 'session_created':
       sessionId = message.sessionId;
       sessionToken = message.sessionToken;
+      isAnonymous = message.isAnonymous;
       showQRCode();
       startPTY();
       break;
 
     case 'phone_connected':
-      console.log(chalk.green(`\n  Phone connected! (${message.phoneCount} device${message.phoneCount > 1 ? 's' : ''})\n`));
+      console.log(chalk.green(`\n  phone connected`));
+      if (message.phoneCount > 1) {
+        console.log(chalk.dim(`  ${message.phoneCount} devices connected`));
+      }
+      console.log('');
       break;
 
     case 'phone_disconnected':
-      console.log(chalk.yellow(`\n  Phone disconnected (${message.phoneCount} device${message.phoneCount > 1 ? 's' : ''} remaining)\n`));
+      if (message.phoneCount > 0) {
+        console.log(chalk.yellow(`\n  phone disconnected (${message.phoneCount} remaining)\n`));
+      } else {
+        console.log(chalk.yellow(`\n  phone disconnected\n`));
+      }
       break;
 
     case 'input':
@@ -102,21 +103,25 @@ function handleServerMessage(message) {
       break;
 
     default:
-      console.log(chalk.dim(`  Unknown message: ${message.type}`));
+      // Ignore unknown messages
   }
 }
 
 function showQRCode() {
   const connectionUrl = `${WEB_APP_URL}/session/${sessionId}?token=${sessionToken}`;
 
-  console.log(chalk.dim('  Scan this QR code with your phone to connect:\n'));
+  console.clear();
+  console.log(chalk.bold.white('\n  remoto'));
+  console.log(chalk.dim('  control your terminal from your phone\n'));
 
   qrcode.generate(connectionUrl, { small: true }, (qr) => {
-    console.log(qr);
-    console.log(chalk.dim(`\n  Or open: ${chalk.underline(connectionUrl)}\n`));
-    console.log(chalk.dim(`  Session ID: ${sessionId}`));
-    console.log(chalk.dim(`  Waiting for phone connection...\n`));
-    console.log(chalk.dim('─'.repeat(cols)));
+    // Indent the QR code
+    const indentedQr = qr.split('\n').map(line => '  ' + line).join('\n');
+    console.log(indentedQr);
+    console.log(chalk.dim(`\n  ${connectionUrl}\n`));
+    console.log(chalk.dim('  scan the qr code or open the link on your phone'));
+    console.log(chalk.dim('  waiting for connection...\n'));
+    console.log(chalk.dim('─'.repeat(Math.min(cols, 60))));
   });
 }
 
@@ -153,7 +158,15 @@ function startPTY() {
 
   // Handle PTY exit
   ptyProcess.onExit(({ exitCode }) => {
-    console.log(chalk.dim(`\n  Session ended (exit code: ${exitCode})`));
+    console.log(chalk.dim(`\n  session ended`));
+
+    // Show account nudge for anonymous users
+    if (isAnonymous) {
+      console.log(chalk.dim('\n  ─────────────────────────────────────────'));
+      console.log(chalk.white('\n  create an account to save session history'));
+      console.log(chalk.dim(`  ${WEB_APP_URL}/signup\n`));
+    }
+
     if (ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({ type: 'exit', code: exitCode }));
       ws.close();

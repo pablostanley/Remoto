@@ -93,17 +93,17 @@ wss.on('connection', (ws, req) => {
 // Handle CLI connections
 async function handleCliConnection(ws, url) {
   const apiKey = url.searchParams.get('apiKey');
+  let userId = null;
+  let isAnonymous = true;
 
-  if (!apiKey) {
-    ws.close(4001, 'API key required');
-    return;
-  }
-
-  // Validate API key
-  const userId = await validateApiKey(apiKey);
-  if (!userId) {
-    ws.close(4002, 'Invalid API key');
-    return;
+  // If API key provided, validate it
+  if (apiKey) {
+    userId = await validateApiKey(apiKey);
+    if (!userId) {
+      ws.close(4002, 'Invalid API key');
+      return;
+    }
+    isAnonymous = false;
   }
 
   // Generate session credentials
@@ -116,6 +116,7 @@ async function handleCliConnection(ws, url) {
     phones: new Set(),
     token: sessionToken,
     userId,
+    isAnonymous,
     createdAt: new Date(),
     buffer: [], // Buffer recent output for phone reconnection
   });
@@ -125,12 +126,13 @@ async function handleCliConnection(ws, url) {
     type: 'session_created',
     sessionId,
     sessionToken,
+    isAnonymous,
   }));
 
-  console.log(`[CLI] Session created: ${sessionId} for user: ${userId}`);
+  console.log(`[CLI] Session created: ${sessionId} ${isAnonymous ? '(anonymous)' : `for user: ${userId}`}`);
 
-  // Record session in database
-  if (supabase) {
+  // Record session in database (only for authenticated users)
+  if (supabase && userId) {
     await supabase.from('sessions').insert({
       id: sessionId,
       user_id: userId,
