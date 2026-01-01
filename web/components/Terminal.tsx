@@ -101,14 +101,16 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
     };
   }, [onData, onResize, onReady, write]);
 
-  // Actually SEND to terminal - send text + newline in ONE message (like "claude\n" which worked)
+  // Actually SEND to terminal - for Claude Code, we need Escape first to ensure submit mode
   const handleSend = () => {
     if (!inputValue.trim()) return;
 
     // Replace any newlines in the input with spaces (flatten to single line)
-    // Then append \n to submit - this matches how "claude\n" worked
     const text = inputValue.replace(/\n/g, ' ').trim();
-    onData(text + '\n');
+
+    // Send: Escape (exit any special mode) + text + carriage return (Enter key)
+    // This should work for both regular shell AND Claude Code
+    onData('\x1b' + text + '\r');
 
     setInputValue('');
     // Reset textarea height
