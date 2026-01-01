@@ -116,9 +116,9 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
         i++;
         setTimeout(sendNextChar, 10); // 10ms between characters
       } else {
-        // After all characters, send Return
+        // After all characters, send newline (Enter key)
         setTimeout(() => {
-          onData('\r');
+          onData('\n');
         }, 20);
       }
     };
@@ -185,7 +185,7 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
             autoComplete="off"
             spellCheck={false}
             inputMode="text"
-            enterKeyHint="return"
+            enterKeyHint="done"
             data-form-type="other"
             data-lpignore="true"
             rows={1}
