@@ -103,14 +103,18 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (inputValue) {
-      // Send text + Enter
-      onData(inputValue + '\r');
-      setInputValue('');
-    } else {
-      // Send just Enter (for submitting in apps like Claude Code)
-      onData('\r');
-    }
+    const text = inputValue + '\r';
+    // Send each character with tiny delay to mimic real typing
+    let i = 0;
+    const sendChar = () => {
+      if (i < text.length) {
+        onData(text[i]);
+        i++;
+        setTimeout(sendChar, 5);
+      }
+    };
+    sendChar();
+    setInputValue('');
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
