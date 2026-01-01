@@ -104,10 +104,12 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (inputValue) {
-      // Send text first, then Enter separately
-      onData(inputValue);
-      setTimeout(() => onData('\r'), 10);
+      // Send text + Enter
+      onData(inputValue + '\r');
       setInputValue('');
+    } else {
+      // Send just Enter (for submitting in apps like Claude Code)
+      onData('\r');
     }
   };
 
