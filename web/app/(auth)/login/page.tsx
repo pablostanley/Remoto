@@ -10,6 +10,7 @@ import { TacoLogo } from '@/components/TacoLogo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { GithubLogo } from '@phosphor-icons/react';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -34,6 +35,19 @@ export default function LoginPage() {
       setLoading(false);
     } else {
       router.push('/dashboard');
+    }
+  };
+
+  const handleGithubLogin = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'github',
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`,
+      },
+    });
+
+    if (error) {
+      setError(error.message);
     }
   };
 
@@ -88,6 +102,20 @@ export default function LoginPage() {
             {loading ? 'Signing in...' : 'Sign in'}
           </Button>
         </form>
+
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+          </div>
+        </div>
+
+        <Button variant="outline" className="w-full" onClick={handleGithubLogin}>
+          <GithubLogo className="mr-2 h-4 w-4" />
+          GitHub
+        </Button>
 
         <p className="mt-6 text-center text-muted-foreground text-sm">
           Don&apos;t have an account?{' '}

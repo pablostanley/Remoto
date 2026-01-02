@@ -114,6 +114,11 @@ export default function Home() {
             <span>Touch-friendly keyboard</span>
           </div>
         </div>
+
+        <div className="pt-6 text-sm text-muted-foreground">
+          <p>Having trouble? Try installing globally:</p>
+          <code className="block mt-2 text-foreground bg-muted px-3 py-2 rounded-md font-mono text-xs">npm install -g remotosh</code>
+        </div>
       </div>
 
       <footer className="mt-24 text-sm text-muted-foreground">
