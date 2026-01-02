@@ -17,59 +17,38 @@ export default async function SessionsPage() {
     <div>
       <div className="mb-8">
         <h1 className="text-2xl font-bold mb-2">Sessions</h1>
-        <p className="text-gray-400">View your session history</p>
+        <p className="text-muted-foreground">View your session history</p>
       </div>
 
       {sessions && sessions.length > 0 ? (
-        <div className="bg-gray-900 rounded-lg border border-gray-800 overflow-hidden">
+        <div className="bg-card rounded-lg border border-border overflow-hidden">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-gray-800">
-                <th className="text-left text-sm font-medium text-gray-400 px-4 py-3">
-                  Session ID
-                </th>
-                <th className="text-left text-sm font-medium text-gray-400 px-4 py-3">
-                  Started
-                </th>
-                <th className="text-left text-sm font-medium text-gray-400 px-4 py-3">
-                  Ended
-                </th>
-                <th className="text-left text-sm font-medium text-gray-400 px-4 py-3">
-                  Duration
-                </th>
-                <th className="text-left text-sm font-medium text-gray-400 px-4 py-3">
-                  Status
-                </th>
+              <tr className="border-b border-border">
+                <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">Session ID</th>
+                <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">Started</th>
+                <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">Ended</th>
+                <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">Duration</th>
+                <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">Status</th>
               </tr>
             </thead>
             <tbody>
               {sessions.map((session) => (
-                <tr
-                  key={session.id}
-                  className="border-b border-gray-800 last:border-0"
-                >
+                <tr key={session.id} className="border-b border-border last:border-0">
                   <td className="px-4 py-3 font-mono text-sm">{session.id}</td>
-                  <td className="px-4 py-3 text-sm text-gray-400">
+                  <td className="px-4 py-3 text-sm text-muted-foreground">
                     {new Date(session.started_at).toLocaleString()}
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-400">
-                    {session.ended_at
-                      ? new Date(session.ended_at).toLocaleString()
-                      : '-'}
+                  <td className="px-4 py-3 text-sm text-muted-foreground">
+                    {session.ended_at ? new Date(session.ended_at).toLocaleString() : '-'}
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-400">
-                    {session.duration_seconds
-                      ? formatDuration(session.duration_seconds)
-                      : '-'}
+                  <td className="px-4 py-3 text-sm text-muted-foreground">
+                    {session.duration_seconds ? formatDuration(session.duration_seconds) : '-'}
                   </td>
                   <td className="px-4 py-3">
-                    <span
-                      className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                        session.status === 'active'
-                          ? 'bg-green-500/10 text-green-400'
-                          : 'bg-gray-500/10 text-gray-400'
-                      }`}
-                    >
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                      session.status === 'active' ? 'bg-muted text-foreground' : 'bg-muted text-muted-foreground'
+                    }`}>
                       {session.status}
                     </span>
                   </td>
@@ -79,8 +58,8 @@ export default async function SessionsPage() {
           </table>
         </div>
       ) : (
-        <div className="bg-gray-900 rounded-lg border border-gray-800 p-8 text-center">
-          <p className="text-gray-400">No sessions yet. Start your first session with the CLI!</p>
+        <div className="bg-card rounded-lg border border-border p-8 text-center">
+          <p className="text-muted-foreground">No sessions yet. Start your first session with the CLI!</p>
         </div>
       )}
     </div>

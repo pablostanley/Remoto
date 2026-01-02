@@ -1,28 +1,35 @@
 'use client';
 
-export const dynamic = 'force-dynamic';
-
 import { useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { TacoLogo } from '@/components/TacoLogo';
 
-export default function LoginPage() {
-  const [email, setEmail] = useState('');
+export default function ResetPasswordPage() {
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const supabase = createClient();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters');
+      return;
+    }
+
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
+    const { error } = await supabase.auth.updateUser({
       password,
     });
 
@@ -41,11 +48,11 @@ export default function LoginPage() {
           <div className="flex justify-center mb-4">
             <TacoLogo size={48} />
           </div>
-          <h1 className="text-3xl font-bold mb-2">Welcome back</h1>
-          <p className="text-gray-400">Sign in to your Remoto account</p>
+          <h1 className="text-3xl font-bold mb-2">Set new password</h1>
+          <p className="text-gray-400">Enter your new password below</p>
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
             <div className="bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-3 rounded-lg text-sm">
               {error}
@@ -53,29 +60,9 @@ export default function LoginPage() {
           )}
 
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-400 mb-1">
-              Email
+            <label htmlFor="password" className="block text-sm font-medium text-gray-400 mb-1">
+              New password
             </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="you@example.com"
-              required
-            />
-          </div>
-
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <label htmlFor="password" className="block text-sm font-medium text-gray-400">
-                Password
-              </label>
-              <Link href="/forgot-password" className="text-sm text-blue-400 hover:text-blue-300">
-                Forgot password?
-              </Link>
-            </div>
             <input
               id="password"
               type="password"
@@ -83,6 +70,23 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="••••••••"
+              minLength={8}
+              required
+            />
+          </div>
+
+          <div>
+            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-400 mb-1">
+              Confirm password
+            </label>
+            <input
+              id="confirmPassword"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="••••••••"
+              minLength={8}
               required
             />
           </div>
@@ -92,16 +96,9 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? 'Signing in...' : 'Sign in'}
+            {loading ? 'Updating...' : 'Update password'}
           </button>
         </form>
-
-        <p className="mt-6 text-center text-gray-400 text-sm">
-          Don&apos;t have an account?{' '}
-          <Link href="/signup" className="text-blue-400 hover:text-blue-300">
-            Sign up
-          </Link>
-        </p>
       </div>
     </main>
   );

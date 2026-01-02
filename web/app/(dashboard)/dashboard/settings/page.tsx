@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 import { useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 
 interface Profile {
   id: string;
@@ -70,7 +71,7 @@ export default function SettingsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-gray-400">Loading...</div>
+        <div className="text-muted-foreground">Loading...</div>
       </div>
     );
   }
@@ -79,40 +80,35 @@ export default function SettingsPage() {
     <div>
       <div className="mb-8">
         <h1 className="text-2xl font-bold mb-2">Settings</h1>
-        <p className="text-gray-400">Manage your account settings</p>
+        <p className="text-muted-foreground">Manage your account settings</p>
       </div>
 
       <div className="space-y-8">
-        {/* Profile section */}
-        <div className="bg-gray-900 rounded-lg border border-gray-800 p-6">
+        <div className="bg-card rounded-lg border border-border p-6">
           <h2 className="text-lg font-semibold mb-4">Profile</h2>
           <form onSubmit={updateProfile} className="space-y-4">
             {message && (
-              <div
-                className={`px-4 py-3 rounded-lg text-sm ${
-                  message.type === 'success'
-                    ? 'bg-green-500/10 border border-green-500/50 text-green-400'
-                    : 'bg-red-500/10 border border-red-500/50 text-red-400'
-                }`}
-              >
+              <div className={`px-4 py-3 rounded-lg text-sm bg-muted ${
+                message.type === 'success' ? 'text-foreground' : 'text-destructive'
+              }`}>
                 {message.text}
               </div>
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-400 mb-1">
+              <label className="block text-sm font-medium text-muted-foreground mb-1">
                 Email
               </label>
               <input
                 type="email"
                 value={profile?.email || ''}
                 disabled
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-gray-400 cursor-not-allowed"
+                className="w-full bg-muted border border-border rounded-lg px-4 py-3 text-muted-foreground cursor-not-allowed"
               />
             </div>
 
             <div>
-              <label htmlFor="fullName" className="block text-sm font-medium text-gray-400 mb-1">
+              <label htmlFor="fullName" className="block text-sm font-medium text-muted-foreground mb-1">
                 Full name
               </label>
               <input
@@ -120,63 +116,52 @@ export default function SettingsPage() {
                 type="text"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full bg-muted border border-border rounded-lg px-4 py-3 text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
 
-            <button
-              type="submit"
-              disabled={saving}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
-            >
+            <Button type="submit" disabled={saving}>
               {saving ? 'Saving...' : 'Save changes'}
-            </button>
+            </Button>
           </form>
         </div>
 
-        {/* Plan section */}
-        <div className="bg-gray-900 rounded-lg border border-gray-800 p-6">
+        <div className="bg-card rounded-lg border border-border p-6">
           <h2 className="text-lg font-semibold mb-4">Plan</h2>
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-lg font-medium capitalize">{profile?.plan}</span>
                 {profile?.plan === 'free' && (
-                  <span className="bg-gray-700 text-gray-300 px-2 py-0.5 rounded text-xs">
+                  <span className="bg-muted text-muted-foreground px-2 py-0.5 rounded text-xs">
                     Current
                   </span>
                 )}
               </div>
-              <p className="text-gray-400 text-sm mt-1">
+              <p className="text-muted-foreground text-sm mt-1">
                 {profile?.plan === 'free'
                   ? 'Limited to 100 sessions per month'
                   : 'Unlimited sessions'}
               </p>
             </div>
             {profile?.plan === 'free' && (
-              <button className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+              <Button variant="secondary">
                 Upgrade to Pro
-              </button>
+              </Button>
             )}
           </div>
         </div>
 
-        {/* Danger zone */}
-        <div className="bg-gray-900 rounded-lg border border-red-900/50 p-6">
-          <h2 className="text-lg font-semibold text-red-400 mb-4">Danger Zone</h2>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="font-medium">Sign out</div>
-                <p className="text-gray-400 text-sm">Sign out of your account</p>
-              </div>
-              <button
-                onClick={handleSignOut}
-                className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-              >
-                Sign out
-              </button>
+        <div className="bg-card rounded-lg border border-border p-6">
+          <h2 className="text-lg font-semibold mb-4">Account</h2>
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="font-medium">Sign out</div>
+              <p className="text-muted-foreground text-sm">Sign out of your account</p>
             </div>
+            <Button variant="secondary" onClick={handleSignOut}>
+              Sign out
+            </Button>
           </div>
         </div>
       </div>
