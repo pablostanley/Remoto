@@ -201,9 +201,9 @@ wss.on('connection', (ws, req) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const path = url.pathname;
 
-  // Get client IP (handle proxies)
-  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
-             req.headers['x-real-ip'] ||
+  // Get client IP - prefer Fly.io's trusted header, fall back to socket address
+  // Don't blindly trust x-forwarded-for as it can be spoofed by clients
+  const ip = req.headers['fly-client-ip'] ||  // Fly.io's trusted client IP header
              req.socket.remoteAddress ||
              'unknown';
 
@@ -419,8 +419,10 @@ function handleCliMessage(sessionId, message) {
     case 'output':
       // Buffer output (keep last 50KB)
       session.buffer.push(message.data);
-      const totalSize = session.buffer.join('').length;
-      while (totalSize > 50000 && session.buffer.length > 1) {
+      // Trim buffer - recalculate size after each shift
+      while (session.buffer.length > 1) {
+        const totalSize = session.buffer.join('').length;
+        if (totalSize <= 50000) break;
         session.buffer.shift();
       }
 
