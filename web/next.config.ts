@@ -6,7 +6,25 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        // Apply these headers to all routes
+        // Session pages have tokens in URLs - use strict no-referrer to prevent token leakage
+        source: '/session/:path*',
+        headers: [
+          {
+            key: 'Referrer-Policy',
+            value: 'no-referrer',
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+        ],
+      },
+      {
+        // Apply these headers to all other routes
         source: '/:path*',
         headers: [
           {
