@@ -33,7 +33,7 @@ export default function Home() {
 
       <div className="space-y-6">
         <h1 className="text-4xl font-medium tracking-tight">
-          Control your terminal from your phone
+          Terminal in your pocket
         </h1>
 
         <p className="text-muted-foreground text-lg leading-relaxed">
