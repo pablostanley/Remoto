@@ -5,6 +5,16 @@ export const dynamic = 'force-dynamic';
 import { useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface Session {
   id: string;
@@ -14,9 +24,22 @@ interface Session {
   status: string;
 }
 
+interface ConfirmDialogState {
+  open: boolean;
+  title: string;
+  description: string;
+  action: () => void;
+}
+
 export default function SessionsPage() {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
+  const [confirmDialog, setConfirmDialog] = useState<ConfirmDialogState>({
+    open: false,
+    title: '',
+    description: '',
+    action: () => {},
+  });
   const supabase = createClient();
 
   useEffect(() => {
@@ -38,9 +61,16 @@ export default function SessionsPage() {
     setLoading(false);
   };
 
-  const endSession = async (sessionId: string) => {
-    if (!confirm('End this session? The CLI will be disconnected.')) return;
+  const showConfirm = (title: string, description: string, action: () => void) => {
+    setConfirmDialog({ open: true, title, description, action });
+  };
 
+  const handleConfirm = () => {
+    confirmDialog.action();
+    setConfirmDialog(prev => ({ ...prev, open: false }));
+  };
+
+  const endSession = async (sessionId: string) => {
     await supabase
       .from('sessions')
       .update({
@@ -48,25 +78,15 @@ export default function SessionsPage() {
         ended_at: new Date().toISOString()
       })
       .eq('id', sessionId);
-
     loadSessions();
   };
 
   const deleteSession = async (sessionId: string) => {
-    if (!confirm('Delete this session from history?')) return;
-
     await supabase
       .from('sessions')
       .delete()
       .eq('id', sessionId);
-
     loadSessions();
-  };
-
-  const reconnectSession = (sessionId: string) => {
-    // Note: This would need the session token which we don't store
-    // For now, show a message
-    alert('To reconnect, scan the QR code from the CLI again.');
   };
 
   if (loading) {
@@ -117,11 +137,27 @@ export default function SessionsPage() {
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-2">
                       {session.status === 'active' && (
-                        <Button variant="ghost" size="sm" onClick={() => endSession(session.id)}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => showConfirm(
+                            'End session?',
+                            'The CLI will be disconnected from this session.',
+                            () => endSession(session.id)
+                          )}
+                        >
                           End
                         </Button>
                       )}
-                      <Button variant="ghost" size="sm" onClick={() => deleteSession(session.id)}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => showConfirm(
+                          'Delete session?',
+                          'This will remove the session from your history.',
+                          () => deleteSession(session.id)
+                        )}
+                      >
                         Delete
                       </Button>
                     </div>
@@ -136,6 +172,19 @@ export default function SessionsPage() {
           <p className="text-muted-foreground">No sessions yet. Start your first session with the CLI!</p>
         </div>
       )}
+
+      <AlertDialog open={confirmDialog.open} onOpenChange={(open) => setConfirmDialog(prev => ({ ...prev, open }))}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{confirmDialog.title}</AlertDialogTitle>
+            <AlertDialogDescription>{confirmDialog.description}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirm}>Continue</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

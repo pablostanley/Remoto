@@ -5,6 +5,16 @@ export const dynamic = 'force-dynamic';
 import { useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface CliToken {
   id: string;
@@ -13,11 +23,32 @@ interface CliToken {
   created_at: string;
 }
 
+interface ConfirmDialogState {
+  open: boolean;
+  title: string;
+  description: string;
+  action: () => void;
+}
+
 export default function DevicesPage() {
   const [devices, setDevices] = useState<CliToken[]>([]);
   const [loading, setLoading] = useState(true);
-
+  const [confirmDialog, setConfirmDialog] = useState<ConfirmDialogState>({
+    open: false,
+    title: '',
+    description: '',
+    action: () => {},
+  });
   const supabase = createClient();
+
+  const showConfirm = (title: string, description: string, action: () => void) => {
+    setConfirmDialog({ open: true, title, description, action });
+  };
+
+  const handleConfirm = () => {
+    confirmDialog.action();
+    setConfirmDialog(prev => ({ ...prev, open: false }));
+  };
 
   useEffect(() => {
     loadDevices();
@@ -34,15 +65,11 @@ export default function DevicesPage() {
   };
 
   const revokeDevice = async (id: string) => {
-    if (!confirm('Are you sure you want to log out this device? You\'ll need to run `npx remotosh` again to reconnect.')) return;
-
     await supabase.from('cli_tokens').delete().eq('id', id);
     loadDevices();
   };
 
   const revokeAllDevices = async () => {
-    if (!confirm('Are you sure you want to log out all devices?')) return;
-
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
@@ -87,7 +114,14 @@ export default function DevicesPage() {
           </p>
         </div>
         {devices.length > 1 && (
-          <Button variant="outline" onClick={revokeAllDevices}>
+          <Button
+            variant="outline"
+            onClick={() => showConfirm(
+              'Log out all devices?',
+              'All terminals will be disconnected. You\'ll need to run `npx remotosh` again to reconnect.',
+              revokeAllDevices
+            )}
+          >
             Log out all devices
           </Button>
         )}
@@ -127,7 +161,15 @@ export default function DevicesPage() {
                     {device.last_used_at ? getRelativeTime(device.last_used_at) : 'Never'}
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <Button variant="ghost" size="sm" onClick={() => revokeDevice(device.id)}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => showConfirm(
+                        'Log out this device?',
+                        'The terminal will be disconnected. You\'ll need to run `npx remotosh` again to reconnect.',
+                        () => revokeDevice(device.id)
+                      )}
+                    >
                       Log out
                     </Button>
                   </td>
@@ -144,6 +186,19 @@ export default function DevicesPage() {
           </p>
         </div>
       )}
+
+      <AlertDialog open={confirmDialog.open} onOpenChange={(open) => setConfirmDialog(prev => ({ ...prev, open }))}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{confirmDialog.title}</AlertDialogTitle>
+            <AlertDialogDescription>{confirmDialog.description}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirm}>Continue</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
