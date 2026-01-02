@@ -3,10 +3,19 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createClient } from "@/utils/supabase/client";
 
 export default function Home() {
   const [copied, setCopied] = useState(false);
+  const [user, setUser] = useState<{ email?: string } | null>(null);
+  const supabase = createClient();
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user);
+    });
+  }, []);
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText('npx remotosh');
@@ -23,12 +32,20 @@ export default function Home() {
           <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-muted text-muted-foreground">beta</span>
         </div>
         <div className="flex items-center gap-4">
-          <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-            Log in
-          </Link>
-          <Link href="/signup">
-            <Button variant="secondary" size="sm">Sign up</Button>
-          </Link>
+          {user ? (
+            <Link href="/dashboard">
+              <Button variant="secondary" size="sm">Dashboard</Button>
+            </Link>
+          ) : (
+            <>
+              <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                Log in
+              </Link>
+              <Link href="/signup">
+                <Button variant="secondary" size="sm">Sign up</Button>
+              </Link>
+            </>
+          )}
         </div>
       </nav>
 
