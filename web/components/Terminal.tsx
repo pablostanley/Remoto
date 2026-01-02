@@ -108,9 +108,8 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
     // Replace any newlines in the input with spaces (flatten to single line)
     const text = inputValue.replace(/\n/g, ' ').trim();
 
-    // Send: Escape (exit any special mode) + text + carriage return (Enter key)
-    // This should work for both regular shell AND Claude Code
-    onData('\x1b' + text + '\r');
+    // Send text + carriage return (Enter key)
+    onData(text + '\r');
 
     setInputValue('');
     // Reset textarea height
