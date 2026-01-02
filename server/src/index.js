@@ -17,6 +17,10 @@ const ALLOWED_ORIGINS = [
   'http://localhost:3001',
 ];
 
+// Session limits
+const MAX_CONCURRENT_SESSIONS = 2;
+const MAX_SESSION_DURATION_MS = 60 * 60 * 1000; // 1 hour
+
 // Initialize Supabase client (service role for server-side operations)
 const supabase = SUPABASE_URL && SUPABASE_SERVICE_KEY
   ? createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
@@ -118,24 +122,43 @@ wss.on('connection', (ws, req) => {
   }
 });
 
+// Count active sessions for a user
+function countUserSessions(userId) {
+  let count = 0;
+  for (const session of sessions.values()) {
+    if (session.userId === userId) {
+      count++;
+    }
+  }
+  return count;
+}
+
 // Handle CLI connections
 async function handleCliConnection(ws, url) {
   const apiKey = url.searchParams.get('apiKey');
-  let userId = null;
-  let isAnonymous = true;
 
-  // If API key provided, validate it
-  if (apiKey) {
-    userId = await validateApiKey(apiKey);
-    if (!userId) {
-      ws.close(4002, 'Invalid API key');
-      return;
-    }
-    isAnonymous = false;
+  // API key is REQUIRED - no anonymous sessions
+  if (!apiKey) {
+    ws.close(4001, 'API key required. Create one at https://remoto.sh/dashboard/api-keys');
+    return;
+  }
+
+  // Validate API key
+  const userId = await validateApiKey(apiKey);
+  if (!userId) {
+    ws.close(4002, 'Invalid API key');
+    return;
+  }
+
+  // Check concurrent session limit
+  const currentSessions = countUserSessions(userId);
+  if (currentSessions >= MAX_CONCURRENT_SESSIONS) {
+    ws.close(4004, `Session limit reached (max ${MAX_CONCURRENT_SESSIONS}). Close an existing session first.`);
+    return;
   }
 
   // Generate session credentials
-  const sessionId = nanoid(12);
+  const sessionId = nanoid(21); // Increased from 12 for better entropy
   const sessionToken = nanoid(32);
 
   // Store session
@@ -144,7 +167,6 @@ async function handleCliConnection(ws, url) {
     phones: new Set(),
     token: sessionToken,
     userId,
-    isAnonymous,
     createdAt: new Date(),
     buffer: [], // Buffer recent output for phone reconnection
   });
@@ -154,10 +176,10 @@ async function handleCliConnection(ws, url) {
     type: 'session_created',
     sessionId,
     sessionToken,
-    isAnonymous,
+    maxDuration: MAX_SESSION_DURATION_MS,
   }));
 
-  console.log(`[CLI] Session created: ${sessionId} ${isAnonymous ? '(anonymous)' : `for user: ${userId}`}`);
+  console.log(`[CLI] Session created: ${sessionId} for user: ${userId} (${currentSessions + 1}/${MAX_CONCURRENT_SESSIONS})`);
 
   // Record session in database (only for authenticated users)
   if (supabase && userId) {
@@ -349,25 +371,49 @@ function handlePhoneMessage(sessionId, message) {
   }
 }
 
-// Cleanup stale sessions periodically
+// Cleanup expired sessions periodically
 setInterval(() => {
   const now = Date.now();
   for (const [sessionId, session] of sessions.entries()) {
-    // Remove sessions older than 24 hours
-    if (now - session.createdAt.getTime() > 24 * 60 * 60 * 1000) {
-      console.log(`[Cleanup] Removing stale session: ${sessionId}`);
+    const sessionAge = now - session.createdAt.getTime();
+    const timeRemaining = MAX_SESSION_DURATION_MS - sessionAge;
+
+    // Warn when 5 minutes remaining
+    if (timeRemaining > 0 && timeRemaining <= 5 * 60 * 1000 && !session.warnedExpiring) {
+      session.warnedExpiring = true;
+      // Send warning to phones
+      for (const phone of session.phones) {
+        if (phone.readyState === WebSocket.OPEN) {
+          phone.send(JSON.stringify({
+            type: 'session_expiring',
+            minutesRemaining: Math.ceil(timeRemaining / 60000),
+          }));
+        }
+      }
+      // Send warning to CLI
       if (session.cli.readyState === WebSocket.OPEN) {
-        session.cli.close(1000, 'Session expired');
+        session.cli.send(JSON.stringify({
+          type: 'session_expiring',
+          minutesRemaining: Math.ceil(timeRemaining / 60000),
+        }));
+      }
+    }
+
+    // Remove expired sessions (1 hour limit)
+    if (sessionAge > MAX_SESSION_DURATION_MS) {
+      console.log(`[Cleanup] Session expired: ${sessionId} (user: ${session.userId})`);
+      if (session.cli.readyState === WebSocket.OPEN) {
+        session.cli.close(1000, 'Session expired (1 hour limit)');
       }
       for (const phone of session.phones) {
         if (phone.readyState === WebSocket.OPEN) {
-          phone.close(1000, 'Session expired');
+          phone.close(1000, 'Session expired (1 hour limit)');
         }
       }
       sessions.delete(sessionId);
     }
   }
-}, 60000); // Check every minute
+}, 30000); // Check every 30 seconds
 
 // Start server
 server.listen(PORT, () => {

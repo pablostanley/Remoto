@@ -72,18 +72,33 @@ let rows = process.stdout.rows || 24;
 console.clear();
 console.log(chalk.bold.white('\n  remoto'));
 console.log(chalk.dim('  control your terminal from your phone\n'));
+
+// API key is required
+if (!API_KEY) {
+  console.log(chalk.yellow('  authentication required\n'));
+  console.log(chalk.white('  to use remoto, you need an API key:\n'));
+  console.log(chalk.dim('  1. create a free account at ') + chalk.cyan('https://remoto.sh/signup'));
+  console.log(chalk.dim('  2. go to ') + chalk.cyan('https://remoto.sh/dashboard/api-keys'));
+  console.log(chalk.dim('  3. create an API key and set it as an environment variable:\n'));
+  console.log(chalk.green('     export REMOTO_API_KEY="your_key_here"'));
+  console.log(chalk.dim('\n  free plan includes:'));
+  console.log(chalk.dim('  • 2 concurrent sessions'));
+  console.log(chalk.dim('  • 1 hour session duration'));
+  console.log(chalk.dim('  • unlimited sessions per month'));
+  console.log(chalk.dim('\n  pro plans with higher limits coming soon!\n'));
+  process.exit(1);
+}
+
 console.log(chalk.dim('  connecting...'));
 
-// Connect to WebSocket server (API key is optional)
-const wsUrl = API_KEY
-  ? `${WS_SERVER_URL}/cli/?apiKey=${encodeURIComponent(API_KEY)}`
-  : `${WS_SERVER_URL}/cli/`;
+// Connect to WebSocket server
+const wsUrl = `${WS_SERVER_URL}/cli/?apiKey=${encodeURIComponent(API_KEY)}`;
 const ws = new WebSocket(wsUrl);
 
 let ptyProcess = null;
 let sessionId = null;
 let sessionToken = null;
-let isAnonymous = true;
+let maxDuration = null;
 let outputBuffer = '';
 let flushTimeout = null;
 
@@ -104,7 +119,25 @@ ws.on('message', (data) => {
 });
 
 ws.on('close', (code, reason) => {
-  console.log(chalk.dim(`\n  disconnected (${code})`));
+  const reasonStr = reason?.toString() || '';
+
+  if (code === 4001) {
+    console.log(chalk.red('\n  error: API key required'));
+    console.log(chalk.dim('  set REMOTO_API_KEY environment variable'));
+  } else if (code === 4002) {
+    console.log(chalk.red('\n  error: invalid API key'));
+    console.log(chalk.dim('  check your API key at https://remoto.sh/dashboard/api-keys'));
+  } else if (code === 4004) {
+    console.log(chalk.yellow('\n  session limit reached'));
+    console.log(chalk.dim('  free plan allows 2 concurrent sessions'));
+    console.log(chalk.dim('  close an existing session and try again'));
+    console.log(chalk.dim('\n  pro plans with higher limits coming soon!'));
+  } else if (reasonStr.includes('expired')) {
+    console.log(chalk.yellow('\n  session expired (1 hour limit)'));
+    console.log(chalk.dim('  start a new session with: npx remotosh'));
+  } else {
+    console.log(chalk.dim(`\n  disconnected (${code})`));
+  }
   cleanup();
 });
 
@@ -121,7 +154,7 @@ function handleServerMessage(message) {
     case 'session_created':
       sessionId = message.sessionId;
       sessionToken = message.sessionToken;
-      isAnonymous = message.isAnonymous;
+      maxDuration = message.maxDuration;
       showQRCode();
       startPTY();
       break;
@@ -142,14 +175,14 @@ function handleServerMessage(message) {
       }
       break;
 
+    case 'session_expiring':
+      console.log(chalk.yellow(`\n  ⚠ session expiring in ${message.minutesRemaining} minutes\n`));
+      break;
+
     case 'input':
       // Input from phone
-      console.log(chalk.dim(`  [debug] input handler, ptyProcess exists: ${!!ptyProcess}`));
       if (ptyProcess) {
-        console.log(chalk.dim(`  [debug] writing to pty: "${message.data}"`));
         ptyProcess.write(message.data);
-      } else {
-        console.log(chalk.red('  [debug] ptyProcess is null!'));
       }
       break;
 
@@ -167,6 +200,7 @@ function handleServerMessage(message) {
 
 function showQRCode() {
   const connectionUrl = `${WEB_APP_URL}/session/${sessionId}?token=${sessionToken}`;
+  const durationMinutes = maxDuration ? Math.floor(maxDuration / 60000) : 60;
 
   console.clear();
   console.log(chalk.bold.white('\n  remoto'));
@@ -178,6 +212,7 @@ function showQRCode() {
     console.log(indentedQr);
     console.log(chalk.dim(`\n  ${connectionUrl}\n`));
     console.log(chalk.dim('  scan the qr code or open the link on your phone'));
+    console.log(chalk.dim(`  session expires in ${durationMinutes} minutes`));
     console.log(chalk.dim('  waiting for connection...\n'));
     console.log(chalk.dim('─'.repeat(Math.min(cols, 60))));
   });
@@ -225,13 +260,6 @@ function startPTY() {
   // Handle PTY exit
   ptyProcess.onExit(({ exitCode }) => {
     console.log(chalk.dim(`\n  session ended`));
-
-    // Show account nudge for anonymous users
-    if (isAnonymous) {
-      console.log(chalk.dim('\n  ─────────────────────────────────────────'));
-      console.log(chalk.white('\n  create an account to save session history'));
-      console.log(chalk.dim(`  ${WEB_APP_URL}/signup\n`));
-    }
 
     if (ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({ type: 'exit', code: exitCode }));
