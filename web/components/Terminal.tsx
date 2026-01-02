@@ -445,13 +445,6 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
             }}
           />
           <button
-            type="button"
-            onClick={() => { onData('\x03'); setInputValue(''); }}
-            className="w-10 h-10 flex items-center justify-center text-red-500 text-sm font-mono font-bold rounded-full hover:bg-gray-800 active:bg-gray-700 shrink-0"
-          >
-            ^C
-          </button>
-          <button
             type="submit"
             className="w-10 h-10 flex items-center justify-center bg-white text-black rounded-full hover:bg-gray-200 active:bg-gray-300 shrink-0"
           >
