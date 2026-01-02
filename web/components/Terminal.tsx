@@ -347,10 +347,10 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
           <button
             type="button"
             onClick={() => setShowCommandPalette(true)}
-            className={`px-3 py-1.5 rounded-full text-sm font-medium ${
+            className={`h-10 px-4 rounded-full text-base font-medium active:scale-95 transition-transform ${
               isClaudeCode
-                ? 'bg-purple-600 hover:bg-purple-500 text-white'
-                : 'bg-gray-800 hover:bg-gray-700 text-gray-300'
+                ? 'bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white'
+                : 'bg-gray-800 hover:bg-gray-700 active:bg-gray-600 text-gray-300'
             }`}
           >
             /
@@ -360,21 +360,21 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
           <button
             type="button"
             onClick={() => onData('\x1b[A')}
-            className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-full text-white text-sm"
+            className="h-10 px-4 bg-gray-800 hover:bg-gray-700 active:bg-gray-600 active:scale-95 transition-transform rounded-full text-white text-base"
           >
             ↑
           </button>
           <button
             type="button"
             onClick={() => onData('\x1b[B')}
-            className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-full text-white text-sm"
+            className="h-10 px-4 bg-gray-800 hover:bg-gray-700 active:bg-gray-600 active:scale-95 transition-transform rounded-full text-white text-base"
           >
             ↓
           </button>
           <button
             type="button"
             onClick={() => onData('\r')}
-            className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-full text-white text-sm"
+            className="h-10 px-4 bg-gray-800 hover:bg-gray-700 active:bg-gray-600 active:scale-95 transition-transform rounded-full text-white text-sm"
           >
             Return
           </button>
@@ -384,7 +384,7 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
             <DrawerTrigger asChild>
               <button
                 type="button"
-                className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-full text-gray-400 text-sm"
+                className="h-10 px-4 bg-gray-800 hover:bg-gray-700 active:bg-gray-600 active:scale-95 transition-transform rounded-full text-gray-400 text-base"
               >
                 •••
               </button>
@@ -416,15 +416,15 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
 
       {/* Text input bar */}
       <div className="shrink-0 bg-[#0a0a0a] border-t border-gray-800 safe-area-bottom">
-        <form autoComplete="off" onSubmit={(e) => { e.preventDefault(); handleSend(); }} className="flex items-end gap-2 p-3">
-          <span className="text-green-500 font-mono text-sm pb-2">$</span>
+        <form autoComplete="off" onSubmit={(e) => { e.preventDefault(); handleSend(); }} className="flex items-center gap-3 p-3">
+          <span className="text-green-500 font-mono text-base shrink-0">$</span>
           <textarea
             ref={inputRef}
             name="terminal-command-input"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="type command..."
+            placeholder="Type a message..."
             autoCapitalize="off"
             autoCorrect="off"
             autoComplete="new-password"
@@ -436,8 +436,8 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
             data-1p-ignore="true"
             aria-autocomplete="none"
             rows={1}
-            className="flex-1 bg-transparent text-white font-mono text-sm focus:outline-none placeholder:text-gray-600 resize-none min-h-[24px] max-h-[120px]"
-            style={{ height: 'auto', overflow: 'hidden' }}
+            className="flex-1 bg-gray-900 text-white font-mono text-base px-4 py-3 rounded-2xl focus:outline-none focus:ring-2 focus:ring-gray-700 placeholder:text-gray-500 resize-none min-h-[48px] max-h-[120px]"
+            style={{ overflow: 'hidden' }}
             onInput={(e) => {
               const target = e.target as HTMLTextAreaElement;
               target.style.height = 'auto';
@@ -447,15 +447,18 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
           <button
             type="button"
             onClick={() => { onData('\x03'); setInputValue(''); }}
-            className="px-2 py-1 text-red-500 text-xs font-mono font-bold"
+            className="w-10 h-10 flex items-center justify-center text-red-500 text-sm font-mono font-bold rounded-full hover:bg-gray-800 active:bg-gray-700 shrink-0"
           >
             ^C
           </button>
           <button
             type="submit"
-            className="px-3 py-1 bg-white text-black rounded text-sm font-medium"
+            className="w-10 h-10 flex items-center justify-center bg-white text-black rounded-full hover:bg-gray-200 active:bg-gray-300 shrink-0"
           >
-            Send
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
           </button>
         </form>
       </div>
