@@ -430,7 +430,6 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
               value={drawerSearch}
               onChange={(e) => setDrawerSearch(e.target.value)}
               placeholder="Search actions..."
-              autoFocus
               className="w-full bg-gray-900 text-white text-base px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-700 placeholder:text-gray-500 mb-4"
             />
           </DrawerHeader>
