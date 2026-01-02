@@ -5,6 +5,31 @@ import { Terminal as XTerm } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import { WebLinksAddon } from '@xterm/addon-web-links';
 import '@xterm/xterm/css/xterm.css';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from '@/components/ui/drawer';
+
+// Common keyboard shortcuts for terminal
+const KEYBOARD_SHORTCUTS = [
+  { key: 'Esc', code: '\x1b', desc: 'Cancel / Exit' },
+  { key: 'Ctrl+C', code: '\x03', desc: 'Interrupt process' },
+  { key: 'Ctrl+D', code: '\x04', desc: 'End of input / Logout' },
+  { key: 'Ctrl+Z', code: '\x1a', desc: 'Suspend process' },
+  { key: 'Ctrl+L', code: '\x0c', desc: 'Clear screen' },
+  { key: 'Tab', code: '\t', desc: 'Autocomplete' },
+  { key: 'Ctrl+A', code: '\x01', desc: 'Move to line start' },
+  { key: 'Ctrl+E', code: '\x05', desc: 'Move to line end' },
+  { key: 'Ctrl+U', code: '\x15', desc: 'Clear line before cursor' },
+  { key: 'Ctrl+K', code: '\x0b', desc: 'Clear line after cursor' },
+  { key: 'Ctrl+W', code: '\x17', desc: 'Delete word before cursor' },
+  { key: 'Ctrl+R', code: '\x12', desc: 'Search command history' },
+  { key: 'Yes', code: 'y\r', desc: 'Confirm (y + Enter)', delay: true },
+  { key: 'No', code: 'n\r', desc: 'Decline (n + Enter)', delay: true },
+];
 
 // Claude Code slash commands
 const CLAUDE_COMMANDS = [
@@ -41,7 +66,20 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [commandSearch, setCommandSearch] = useState('');
   const [recentCommands, setRecentCommands] = useState<string[]>([]);
+  const [showKeyboardDrawer, setShowKeyboardDrawer] = useState(false);
   const outputBufferRef = useRef('');
+
+  // Send keyboard shortcut
+  const sendShortcut = (shortcut: typeof KEYBOARD_SHORTCUTS[0]) => {
+    if (shortcut.delay) {
+      // For Yes/No, send character first then Enter
+      onData(shortcut.code[0]);
+      setTimeout(() => onData('\r'), 100);
+    } else {
+      onData(shortcut.code);
+    }
+    setShowKeyboardDrawer(false);
+  };
 
   // Load recent commands from localStorage
   useEffect(() => {
@@ -302,9 +340,9 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
         </div>
       )}
 
-      {/* Quick actions for Claude Code prompts */}
+      {/* Quick actions bar */}
       <div className="shrink-0 bg-[#111] border-t border-gray-800 px-3 py-2">
-        <div className="flex items-center gap-2 overflow-x-auto">
+        <div className="flex items-center gap-2">
           {/* Commands button - highlighted when in Claude Code */}
           <button
             type="button"
@@ -322,47 +360,57 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
           <button
             type="button"
             onClick={() => onData('\x1b[A')}
-            className="flex items-center gap-1 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-full text-white text-sm"
+            className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-full text-white text-sm"
           >
-            <span>↑</span>
+            ↑
           </button>
           <button
             type="button"
             onClick={() => onData('\x1b[B')}
-            className="flex items-center gap-1 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-full text-white text-sm"
+            className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-full text-white text-sm"
           >
-            <span>↓</span>
+            ↓
           </button>
           <button
             type="button"
             onClick={() => onData('\r')}
-            className="px-3 py-1.5 bg-green-600 hover:bg-green-500 rounded-full text-white text-sm font-medium"
-          >
-            Select
-          </button>
-          <div className="w-px h-6 bg-gray-700" />
-          {/* Common responses */}
-          <button
-            type="button"
-            onClick={() => { onData('y'); setTimeout(() => onData('\r'), 100); }}
-            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded-full text-white text-sm"
-          >
-            Yes
-          </button>
-          <button
-            type="button"
-            onClick={() => { onData('n'); setTimeout(() => onData('\r'), 100); }}
             className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-full text-white text-sm"
           >
-            No
+            ↵
           </button>
-          <button
-            type="button"
-            onClick={() => onData('\x1b')}
-            className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-full text-gray-400 text-sm"
-          >
-            Esc
-          </button>
+          <div className="flex-1" />
+          {/* Keyboard shortcuts drawer */}
+          <Drawer open={showKeyboardDrawer} onOpenChange={setShowKeyboardDrawer}>
+            <DrawerTrigger asChild>
+              <button
+                type="button"
+                className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-full text-gray-400 text-sm"
+              >
+                •••
+              </button>
+            </DrawerTrigger>
+            <DrawerContent className="bg-[#111] border-gray-800">
+              <DrawerHeader>
+                <DrawerTitle className="text-white">Keyboard Shortcuts</DrawerTitle>
+              </DrawerHeader>
+              <div className="px-4 pb-8 max-h-[60vh] overflow-y-auto">
+                <div className="grid gap-2">
+                  {KEYBOARD_SHORTCUTS.map((shortcut) => (
+                    <button
+                      key={shortcut.key}
+                      onClick={() => sendShortcut(shortcut)}
+                      className="flex items-center justify-between px-4 py-3 bg-gray-900 hover:bg-gray-800 rounded-lg text-left"
+                    >
+                      <span className="text-gray-400 text-sm">{shortcut.desc}</span>
+                      <span className="text-white font-mono text-sm bg-gray-800 px-2 py-1 rounded">
+                        {shortcut.key}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </DrawerContent>
+          </Drawer>
         </div>
       </div>
 
