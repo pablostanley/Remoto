@@ -28,9 +28,11 @@ export default function DashboardLayout({
 
   useEffect(() => {
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.push('/login');
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (!user || error) {
+        // Clear any stale session before redirecting
+        await supabase.auth.signOut();
+        router.replace('/login');
         return;
       }
       setUser(user);
