@@ -376,7 +376,7 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
             onClick={() => onData('\r')}
             className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-full text-white text-sm"
           >
-            ↵
+            Return
           </button>
           <div className="flex-1" />
           {/* Keyboard shortcuts drawer */}
