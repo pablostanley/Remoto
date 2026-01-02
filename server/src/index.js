@@ -21,6 +21,11 @@ const ALLOWED_ORIGINS = [
 const MAX_CONCURRENT_SESSIONS = 2;
 const MAX_SESSION_DURATION_MS = 60 * 60 * 1000; // 1 hour
 
+// Security limits
+const API_KEY_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const MAX_CONNECTIONS_PER_IP = 10;
+const CONNECTION_WINDOW_MS = 60 * 1000; // 1 minute
+
 // Initialize Supabase client (service role for server-side operations)
 const supabase = SUPABASE_URL && SUPABASE_SERVICE_KEY
   ? createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
@@ -30,8 +35,11 @@ const supabase = SUPABASE_URL && SUPABASE_SERVICE_KEY
 // Map<sessionId, { cli: WebSocket, phones: Set<WebSocket>, token: string, userId: string, createdAt: Date }>
 const sessions = new Map();
 
-// Map<apiKey, userId> for quick lookups
+// Map<apiKey, { userId, cachedAt }> for quick lookups with TTL
 const apiKeyCache = new Map();
+
+// Map<ip, { count, windowStart }> for rate limiting
+const connectionRateLimit = new Map();
 
 // Create HTTP server for health checks
 const server = http.createServer((req, res) => {
@@ -70,11 +78,46 @@ const wss = new WebSocketServer({
   }
 });
 
+// Check rate limit for IP
+function checkRateLimit(ip) {
+  const now = Date.now();
+  const record = connectionRateLimit.get(ip);
+
+  if (!record) {
+    connectionRateLimit.set(ip, { count: 1, windowStart: now });
+    return true;
+  }
+
+  // Reset window if expired
+  if (now - record.windowStart > CONNECTION_WINDOW_MS) {
+    connectionRateLimit.set(ip, { count: 1, windowStart: now });
+    return true;
+  }
+
+  // Check if over limit
+  if (record.count >= MAX_CONNECTIONS_PER_IP) {
+    return false;
+  }
+
+  // Increment count
+  record.count++;
+  return true;
+}
+
 // Validate API key and get user ID
 async function validateApiKey(apiKey) {
-  // Check cache first
+  // Check cache first (with TTL)
   if (apiKeyCache.has(apiKey)) {
-    return apiKeyCache.get(apiKey);
+    const cached = apiKeyCache.get(apiKey);
+    const age = Date.now() - cached.cachedAt;
+
+    // Return cached value if not expired
+    if (age < API_KEY_CACHE_TTL_MS) {
+      return cached.userId;
+    }
+
+    // Cache expired, remove it
+    apiKeyCache.delete(apiKey);
   }
 
   if (!supabase) {
@@ -94,8 +137,12 @@ async function validateApiKey(apiKey) {
     return null;
   }
 
-  // Cache the result
-  apiKeyCache.set(apiKey, data.user_id);
+  // Cache the result with timestamp
+  apiKeyCache.set(apiKey, {
+    userId: data.user_id,
+    cachedAt: Date.now(),
+  });
+
   return data.user_id;
 }
 
@@ -110,7 +157,20 @@ wss.on('connection', (ws, req) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const path = url.pathname;
 
-  console.log(`[WS] New connection: ${path}`);
+  // Get client IP (handle proxies)
+  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
+             req.headers['x-real-ip'] ||
+             req.socket.remoteAddress ||
+             'unknown';
+
+  // Check rate limit
+  if (!checkRateLimit(ip)) {
+    console.log(`[Security] Rate limit exceeded for IP: ${ip}`);
+    ws.close(4029, 'Too many connections. Please wait and try again.');
+    return;
+  }
+
+  console.log(`[WS] New connection: ${path} from ${ip}`);
 
   // Route based on path
   if (path.startsWith('/cli/')) {
@@ -371,9 +431,25 @@ function handlePhoneMessage(sessionId, message) {
   }
 }
 
-// Cleanup expired sessions periodically
+// Cleanup expired sessions and rate limit entries periodically
 setInterval(() => {
   const now = Date.now();
+
+  // Clean up stale rate limit entries
+  for (const [ip, record] of connectionRateLimit.entries()) {
+    if (now - record.windowStart > CONNECTION_WINDOW_MS * 2) {
+      connectionRateLimit.delete(ip);
+    }
+  }
+
+  // Clean up expired API key cache entries
+  for (const [key, cached] of apiKeyCache.entries()) {
+    if (now - cached.cachedAt > API_KEY_CACHE_TTL_MS) {
+      apiKeyCache.delete(key);
+    }
+  }
+
+  // Clean up expired sessions
   for (const [sessionId, session] of sessions.entries()) {
     const sessionAge = now - session.createdAt.getTime();
     const timeRemaining = MAX_SESSION_DURATION_MS - sessionAge;
