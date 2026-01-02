@@ -108,8 +108,14 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
     // Replace any newlines in the input with spaces (flatten to single line)
     const text = inputValue.replace(/\n/g, ' ').trim();
 
-    // Send text + carriage return (Enter key)
-    onData(text + '\r');
+    // Send text first
+    onData(text);
+
+    // Then send Enter key separately after a delay
+    // This prevents "paste mode" detection where Enter becomes a newline
+    setTimeout(() => {
+      onData('\r');
+    }, 100);
 
     setInputValue('');
     // Reset textarea height
