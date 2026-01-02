@@ -320,7 +320,7 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
               <button
                 type="button"
                 onClick={() => onData('\x1b[A')}
-                className="h-10 px-4 bg-gray-800 hover:bg-gray-700 active:bg-gray-600 active:scale-95 transition-transform rounded-full text-white text-base"
+                className="h-10 px-4 bg-secondary hover:bg-secondary/80 active:bg-secondary/60 active:scale-95 transition-transform rounded-full text-foreground text-base"
               >
                 ↑
               </button>
@@ -329,7 +329,7 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
               <button
                 type="button"
                 onClick={() => onData('\x1b[B')}
-                className="h-10 px-4 bg-gray-800 hover:bg-gray-700 active:bg-gray-600 active:scale-95 transition-transform rounded-full text-white text-base"
+                className="h-10 px-4 bg-secondary hover:bg-secondary/80 active:bg-secondary/60 active:scale-95 transition-transform rounded-full text-foreground text-base"
               >
                 ↓
               </button>
@@ -340,7 +340,7 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
               <button
                 type="button"
                 onClick={() => sendAction('y', true)}
-                className="h-10 px-5 bg-green-600 hover:bg-green-500 active:bg-green-700 active:scale-95 transition-transform rounded-full text-white text-sm font-medium"
+                className="h-10 px-5 bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/80 active:scale-95 transition-transform rounded-full text-sm font-medium"
               >
                 Yes
               </button>
@@ -349,7 +349,7 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
               <button
                 type="button"
                 onClick={() => sendAction('n', true)}
-                className="h-10 px-5 bg-gray-800 hover:bg-gray-700 active:bg-gray-600 active:scale-95 transition-transform rounded-full text-white text-sm font-medium"
+                className="h-10 px-5 bg-secondary hover:bg-secondary/80 active:bg-secondary/60 active:scale-95 transition-transform rounded-full text-foreground text-sm font-medium"
               >
                 No
               </button>
@@ -368,7 +368,7 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
               inputRef.current?.blur();
               setShowDrawer(true);
             }}
-            className="w-10 h-10 flex items-center justify-center bg-gray-800 hover:bg-gray-700 active:bg-gray-600 active:scale-95 transition-transform rounded-full text-gray-400 text-xl shrink-0"
+            className="w-10 h-10 flex items-center justify-center bg-secondary hover:bg-secondary/80 active:bg-secondary/60 active:scale-95 transition-transform rounded-full text-muted-foreground text-xl shrink-0"
           >
             +
           </button>
@@ -398,7 +398,7 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
             data-protonpass-ignore="true"
             aria-autocomplete="none"
             rows={1}
-            className="flex-1 bg-gray-900 text-white text-base px-4 py-3 rounded-2xl focus:outline-none focus:ring-2 focus:ring-gray-700 placeholder:text-gray-500 resize-none min-h-[48px] max-h-[120px]"
+            className="flex-1 bg-card text-foreground text-base px-4 py-3 rounded-2xl border border-border focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground resize-none min-h-[48px] max-h-[120px]"
             style={{ overflow: 'hidden' }}
             onInput={(e) => {
               const target = e.target as HTMLTextAreaElement;
@@ -410,7 +410,7 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
           {/* Send button (also works as Return) */}
           <button
             type="submit"
-            className="w-10 h-10 flex items-center justify-center bg-white text-black rounded-full hover:bg-gray-200 active:bg-gray-300 active:scale-95 transition-transform shrink-0"
+            className="w-10 h-10 flex items-center justify-center bg-primary text-primary-foreground rounded-full hover:bg-primary/90 active:bg-primary/80 active:scale-95 transition-transform shrink-0"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
               <path d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z"/>
@@ -421,16 +421,16 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
 
       {/* Unified drawer */}
       <Drawer open={showDrawer} onOpenChange={setShowDrawer}>
-        <DrawerContent className="bg-[#0a0a0a] border-gray-800 max-h-[85vh]">
-          <DrawerHeader className="border-b border-gray-800 pb-0">
-            <DrawerTitle className="text-white sr-only">Actions & Commands</DrawerTitle>
+        <DrawerContent className="bg-background border-border max-h-[85vh]">
+          <DrawerHeader className="border-b border-border pb-0">
+            <DrawerTitle className="text-foreground sr-only">Actions & Commands</DrawerTitle>
             {/* Search input */}
             <input
               type="text"
               value={drawerSearch}
               onChange={(e) => setDrawerSearch(e.target.value)}
               placeholder="Search actions..."
-              className="w-full bg-gray-900 text-white text-base px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-700 placeholder:text-gray-500 mb-4"
+              className="w-full bg-card text-foreground text-base px-4 py-3 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground mb-4"
             />
           </DrawerHeader>
 
@@ -438,13 +438,13 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
             {/* Recent commands */}
             {!drawerSearch && recentCommands.length > 0 && (
               <div className="mb-6">
-                <p className="text-xs text-gray-500 uppercase mb-2 px-1">Recent</p>
+                <p className="text-xs text-muted-foreground uppercase mb-2 px-1">Recent</p>
                 <div className="flex flex-wrap gap-2">
                   {recentCommands.map((cmd) => (
                     <button
                       key={cmd}
                       onClick={() => insertCommand(cmd)}
-                      className="px-3 py-2 bg-gray-800 hover:bg-gray-700 active:bg-gray-600 rounded-full text-sm text-white"
+                      className="px-3 py-2 bg-secondary hover:bg-secondary/80 active:bg-secondary/60 rounded-full text-sm text-foreground"
                     >
                       {cmd}
                     </button>
@@ -456,16 +456,16 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
             {/* Quick actions */}
             {QUICK_ACTIONS.filter(a => !drawerSearch || a.key.toLowerCase().includes(drawerSearch.toLowerCase()) || a.desc.toLowerCase().includes(drawerSearch.toLowerCase())).length > 0 && (
               <div className="mb-6">
-                <p className="text-xs text-gray-500 uppercase mb-2 px-1">Navigation</p>
+                <p className="text-xs text-muted-foreground uppercase mb-2 px-1">Navigation</p>
                 <div className="grid grid-cols-3 gap-2">
                   {QUICK_ACTIONS.filter(a => !drawerSearch || a.key.toLowerCase().includes(drawerSearch.toLowerCase()) || a.desc.toLowerCase().includes(drawerSearch.toLowerCase())).map((action) => (
                     <button
                       key={action.key}
                       onClick={() => sendAction(action.code)}
-                      className="flex flex-col items-center gap-1 px-3 py-3 bg-gray-900 hover:bg-gray-800 active:bg-gray-700 rounded-xl"
+                      className="flex flex-col items-center gap-1 px-3 py-3 bg-card hover:bg-card/80 active:bg-card/60 border border-border rounded-xl"
                     >
-                      <span className="text-white text-lg">{action.key}</span>
-                      <span className="text-gray-500 text-xs">{action.desc}</span>
+                      <span className="text-foreground text-lg">{action.key}</span>
+                      <span className="text-muted-foreground text-xs">{action.desc}</span>
                     </button>
                   ))}
                 </div>
@@ -475,15 +475,15 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
             {/* Yes/No */}
             {YES_NO_ACTIONS.filter(a => !drawerSearch || a.key.toLowerCase().includes(drawerSearch.toLowerCase()) || a.desc.toLowerCase().includes(drawerSearch.toLowerCase())).length > 0 && (
               <div className="mb-6">
-                <p className="text-xs text-gray-500 uppercase mb-2 px-1">Quick Responses</p>
+                <p className="text-xs text-muted-foreground uppercase mb-2 px-1">Quick Responses</p>
                 <div className="grid grid-cols-2 gap-2">
                   {YES_NO_ACTIONS.filter(a => !drawerSearch || a.key.toLowerCase().includes(drawerSearch.toLowerCase()) || a.desc.toLowerCase().includes(drawerSearch.toLowerCase())).map((action) => (
                     <button
                       key={action.key}
                       onClick={() => sendAction(action.code, true)}
-                      className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-900 hover:bg-gray-800 active:bg-gray-700 rounded-xl"
+                      className="flex items-center justify-center gap-2 px-4 py-3 bg-card hover:bg-card/80 active:bg-card/60 border border-border rounded-xl"
                     >
-                      <span className="text-white font-medium">{action.key}</span>
+                      <span className="text-foreground font-medium">{action.key}</span>
                     </button>
                   ))}
                 </div>
@@ -493,16 +493,16 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
             {/* Claude commands - only when detected */}
             {isClaudeCode && CLAUDE_COMMANDS.filter(c => !drawerSearch || c.cmd.toLowerCase().includes(drawerSearch.toLowerCase()) || c.desc.toLowerCase().includes(drawerSearch.toLowerCase())).length > 0 && (
               <div className="mb-6">
-                <p className="text-xs text-gray-500 uppercase mb-2 px-1">Claude Commands</p>
+                <p className="text-xs text-muted-foreground uppercase mb-2 px-1">Claude Commands</p>
                 <div className="space-y-1">
                   {CLAUDE_COMMANDS.filter(c => !drawerSearch || c.cmd.toLowerCase().includes(drawerSearch.toLowerCase()) || c.desc.toLowerCase().includes(drawerSearch.toLowerCase())).map((cmd) => (
                     <button
                       key={cmd.cmd}
                       onClick={() => insertCommand(cmd.cmd)}
-                      className="w-full flex items-center gap-3 px-4 py-3 bg-gray-900 hover:bg-gray-800 active:bg-gray-700 rounded-xl text-left"
+                      className="w-full flex items-center gap-3 px-4 py-3 bg-card hover:bg-card/80 active:bg-card/60 border border-border rounded-xl text-left"
                     >
-                      <span className="text-purple-400 font-mono text-sm">{cmd.cmd}</span>
-                      <span className="text-gray-400 text-sm">{cmd.desc}</span>
+                      <span className="text-foreground font-mono text-sm">{cmd.cmd}</span>
+                      <span className="text-muted-foreground text-sm">{cmd.desc}</span>
                     </button>
                   ))}
                 </div>
@@ -512,16 +512,16 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
             {/* Keyboard shortcuts */}
             {KEYBOARD_SHORTCUTS.filter(s => !drawerSearch || s.key.toLowerCase().includes(drawerSearch.toLowerCase()) || s.desc.toLowerCase().includes(drawerSearch.toLowerCase())).length > 0 && (
               <div className="mb-6">
-                <p className="text-xs text-gray-500 uppercase mb-2 px-1">Keyboard Shortcuts</p>
+                <p className="text-xs text-muted-foreground uppercase mb-2 px-1">Keyboard Shortcuts</p>
                 <div className="space-y-1">
                   {KEYBOARD_SHORTCUTS.filter(s => !drawerSearch || s.key.toLowerCase().includes(drawerSearch.toLowerCase()) || s.desc.toLowerCase().includes(drawerSearch.toLowerCase())).map((shortcut) => (
                     <button
                       key={shortcut.key}
                       onClick={() => sendAction(shortcut.code)}
-                      className="w-full flex items-center justify-between px-4 py-3 bg-gray-900 hover:bg-gray-800 active:bg-gray-700 rounded-xl"
+                      className="w-full flex items-center justify-between px-4 py-3 bg-card hover:bg-card/80 active:bg-card/60 border border-border rounded-xl"
                     >
-                      <span className="text-gray-400 text-sm">{shortcut.desc}</span>
-                      <span className="text-white font-mono text-sm bg-gray-800 px-2 py-1 rounded">
+                      <span className="text-muted-foreground text-sm">{shortcut.desc}</span>
+                      <span className="text-foreground font-mono text-sm bg-secondary px-2 py-1 rounded">
                         {shortcut.key}
                       </span>
                     </button>

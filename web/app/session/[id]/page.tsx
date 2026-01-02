@@ -17,7 +17,7 @@ const Terminal = nextDynamic(() => import('@/components/Terminal'), {
   ssr: false,
   loading: () => (
     <div className="flex items-center justify-center h-full">
-      <div className="text-gray-500">Loading terminal...</div>
+      <div className="text-muted-foreground">Loading terminal...</div>
     </div>
   ),
 });
@@ -247,11 +247,11 @@ export default function SessionPage() {
   if (status === 'error') {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center p-8 text-center">
-        <div className="text-red-500 text-xl mb-4">Connection Error</div>
-        <p className="text-gray-400 mb-8">{errorMessage}</p>
+        <div className="text-destructive text-xl mb-4">Connection Error</div>
+        <p className="text-muted-foreground mb-8">{errorMessage}</p>
         <a
           href="/"
-          className="bg-gray-800 hover:bg-gray-700 px-6 py-3 rounded-lg transition-colors"
+          className="bg-secondary hover:bg-secondary/80 px-6 py-3 rounded-lg transition-colors"
         >
           Go Home
         </a>
@@ -262,13 +262,13 @@ export default function SessionPage() {
   if (status === 'disconnected') {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center p-8 text-center">
-        <div className="text-yellow-500 text-xl mb-4">Session Ended</div>
-        <p className="text-gray-400 mb-8">
+        <div className="text-foreground text-xl mb-4">Session Ended</div>
+        <p className="text-muted-foreground mb-8">
           The terminal session has been closed.
         </p>
         <a
           href="/"
-          className="bg-gray-800 hover:bg-gray-700 px-6 py-3 rounded-lg transition-colors"
+          className="bg-secondary hover:bg-secondary/80 px-6 py-3 rounded-lg transition-colors"
         >
           Go Home
         </a>
@@ -279,19 +279,19 @@ export default function SessionPage() {
   return (
     <main className="flex flex-col h-[100dvh] bg-[#0a0a0a] overflow-hidden">
       {/* Header bar */}
-      <div className="shrink-0 flex items-center justify-between px-2 py-2 bg-[#0a0a0a] safe-area-top">
+      <div className="shrink-0 flex items-center justify-between px-2 py-2 bg-background safe-area-top">
         {/* Logo button */}
         <button
           type="button"
           onClick={() => window.location.href = '/'}
-          className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-800 active:bg-gray-700 transition-colors"
+          className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-secondary active:bg-secondary/80 transition-colors"
         >
           <TacoLogo className="w-6 h-6" />
         </button>
 
         {/* Terminal name + status */}
         <div className="flex flex-col items-center">
-          <span className="text-xs text-gray-400 font-mono">{displayName}</span>
+          <span className="text-xs text-muted-foreground font-mono">{displayName}</span>
           <div className="flex items-center gap-1.5">
             <div
               className={`w-1.5 h-1.5 rounded-full ${
@@ -299,10 +299,10 @@ export default function SessionPage() {
                   ? 'bg-green-500'
                   : status === 'connecting'
                   ? 'bg-yellow-500 animate-pulse'
-                  : 'bg-red-500'
+                  : 'bg-destructive'
               }`}
             />
-            <span className="text-[10px] text-gray-500">
+            <span className="text-[10px] text-muted-foreground">
               {status === 'connected'
                 ? 'connected'
                 : status === 'connecting'
@@ -316,9 +316,9 @@ export default function SessionPage() {
         <button
           type="button"
           onClick={() => setShowMenu(true)}
-          className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-800 active:bg-gray-700 transition-colors"
+          className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-secondary active:bg-secondary/80 transition-colors"
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground">
             <circle cx="12" cy="12" r="1" />
             <circle cx="12" cy="5" r="1" />
             <circle cx="12" cy="19" r="1" />
@@ -330,7 +330,7 @@ export default function SessionPage() {
       <div className="flex-1 min-h-0 overflow-hidden">
         {status === 'connecting' ? (
           <div className="flex items-center justify-center h-full">
-            <div className="text-gray-500">Connecting to terminal...</div>
+            <div className="text-muted-foreground">Connecting to terminal...</div>
           </div>
         ) : (
           <Terminal
@@ -343,40 +343,40 @@ export default function SessionPage() {
 
       {/* Session menu drawer */}
       <Drawer open={showMenu} onOpenChange={setShowMenu}>
-        <DrawerContent className="bg-[#0a0a0a] border-gray-800">
-          <DrawerHeader className="border-b border-gray-800">
-            <DrawerTitle className="text-white text-center">Session Options</DrawerTitle>
+        <DrawerContent className="bg-background border-border">
+          <DrawerHeader className="border-b border-border">
+            <DrawerTitle className="text-foreground text-center">Session Options</DrawerTitle>
           </DrawerHeader>
 
           <div className="p-4 space-y-2">
             {/* Clear terminal */}
             <button
               onClick={handleClearTerminal}
-              className="w-full flex items-center gap-4 px-4 py-4 bg-gray-900 hover:bg-gray-800 active:bg-gray-700 rounded-xl text-left"
+              className="w-full flex items-center gap-4 px-4 py-4 bg-card hover:bg-card/80 active:bg-card/60 border border-border rounded-xl text-left"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground">
                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
                 <line x1="9" y1="9" x2="15" y2="15" />
                 <line x1="15" y1="9" x2="9" y2="15" />
               </svg>
               <div>
-                <div className="text-white text-sm font-medium">Clear Terminal</div>
-                <div className="text-gray-500 text-xs">Clear the screen</div>
+                <div className="text-foreground text-sm font-medium">Clear Terminal</div>
+                <div className="text-muted-foreground text-xs">Clear the screen</div>
               </div>
             </button>
 
             {/* Copy link */}
             <button
               onClick={handleCopyLink}
-              className="w-full flex items-center gap-4 px-4 py-4 bg-gray-900 hover:bg-gray-800 active:bg-gray-700 rounded-xl text-left"
+              className="w-full flex items-center gap-4 px-4 py-4 bg-card hover:bg-card/80 active:bg-card/60 border border-border rounded-xl text-left"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground">
                 <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
                 <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
               </svg>
               <div>
-                <div className="text-white text-sm font-medium">Copy Session Link</div>
-                <div className="text-gray-500 text-xs">Share this session URL</div>
+                <div className="text-foreground text-sm font-medium">Copy Session Link</div>
+                <div className="text-muted-foreground text-xs">Share this session URL</div>
               </div>
             </button>
 
@@ -384,37 +384,37 @@ export default function SessionPage() {
             {status !== 'connected' && (
               <button
                 onClick={handleReconnect}
-                className="w-full flex items-center gap-4 px-4 py-4 bg-gray-900 hover:bg-gray-800 active:bg-gray-700 rounded-xl text-left"
+                className="w-full flex items-center gap-4 px-4 py-4 bg-card hover:bg-card/80 active:bg-card/60 border border-border rounded-xl text-left"
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground">
                   <polyline points="23 4 23 10 17 10" />
                   <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
                 </svg>
                 <div>
-                  <div className="text-white text-sm font-medium">Reconnect</div>
-                  <div className="text-gray-500 text-xs">Try to reconnect to the session</div>
+                  <div className="text-foreground text-sm font-medium">Reconnect</div>
+                  <div className="text-muted-foreground text-xs">Try to reconnect to the session</div>
                 </div>
               </button>
             )}
 
             {/* Session info */}
-            <div className="px-4 py-4 bg-gray-900 rounded-xl">
-              <div className="text-gray-500 text-xs mb-1">Session ID</div>
-              <div className="text-white text-sm font-mono break-all">{sessionId}</div>
+            <div className="px-4 py-4 bg-card border border-border rounded-xl">
+              <div className="text-muted-foreground text-xs mb-1">Session ID</div>
+              <div className="text-foreground text-sm font-mono break-all">{sessionId}</div>
             </div>
 
             {/* End session - destructive */}
             <button
               onClick={handleEndSession}
-              className="w-full flex items-center gap-4 px-4 py-4 bg-red-900/30 hover:bg-red-900/50 active:bg-red-900/70 rounded-xl text-left mt-4"
+              className="w-full flex items-center gap-4 px-4 py-4 bg-destructive/10 hover:bg-destructive/20 active:bg-destructive/30 border border-destructive/30 rounded-xl text-left mt-4"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-400">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-destructive">
                 <path d="M18.36 6.64a9 9 0 1 1-12.73 0" />
                 <line x1="12" y1="2" x2="12" y2="12" />
               </svg>
               <div>
-                <div className="text-red-400 text-sm font-medium">End Session</div>
-                <div className="text-red-400/60 text-xs">Disconnect and close this session</div>
+                <div className="text-destructive text-sm font-medium">End Session</div>
+                <div className="text-destructive/60 text-xs">Disconnect and close this session</div>
               </div>
             </button>
           </div>
