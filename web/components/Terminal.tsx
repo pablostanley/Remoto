@@ -286,36 +286,23 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
         onClick={() => inputRef.current?.focus()}
       />
 
-      {/* Claude Code toolbar - shows when Claude detected */}
-      {isClaudeCode && (
-        <div className="shrink-0 bg-[#0a0a0a] px-3 pt-2">
+      {/* Toolbar - always visible */}
+      <div className="shrink-0 bg-[#0a0a0a] px-3 pt-2">
+        <div className="flex items-center justify-between">
+          {/* Left side: Plus button */}
+          <button
+            type="button"
+            onClick={() => {
+              inputRef.current?.blur();
+              setShowDrawer(true);
+            }}
+            className="w-10 h-10 flex items-center justify-center bg-secondary hover:bg-secondary/80 active:bg-secondary/60 active:scale-95 transition-transform rounded-full text-muted-foreground text-xl"
+          >
+            +
+          </button>
+
+          {/* Right side: Caret navigation */}
           <div className="flex items-center gap-2">
-            {/* Slash command button */}
-            <button
-              type="button"
-              onClick={() => {
-                setInputValue('/');
-                inputRef.current?.focus();
-              }}
-              className="w-10 h-10 flex items-center justify-center bg-secondary hover:bg-secondary/80 active:bg-secondary/60 active:scale-95 transition-transform rounded-full text-muted-foreground text-lg"
-            >
-              /
-            </button>
-            {/* Arrow navigation */}
-            <button
-              type="button"
-              onClick={() => onData('\x1b[A')}
-              className="w-10 h-10 flex items-center justify-center bg-secondary hover:bg-secondary/80 active:bg-secondary/60 active:scale-95 transition-transform rounded-full text-foreground text-base"
-            >
-              ↑
-            </button>
-            <button
-              type="button"
-              onClick={() => onData('\x1b[B')}
-              className="w-10 h-10 flex items-center justify-center bg-secondary hover:bg-secondary/80 active:bg-secondary/60 active:scale-95 transition-transform rounded-full text-foreground text-base"
-            >
-              ↓
-            </button>
             {/* Yes/No - only when y/n prompt detected */}
             {hasYesNoPrompt && (
               <>
@@ -335,25 +322,27 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
                 </button>
               </>
             )}
+            <button
+              type="button"
+              onClick={() => onData('\x1b[A')}
+              className="w-10 h-10 flex items-center justify-center bg-secondary hover:bg-secondary/80 active:bg-secondary/60 active:scale-95 transition-transform rounded-full text-muted-foreground text-lg"
+            >
+              ˄
+            </button>
+            <button
+              type="button"
+              onClick={() => onData('\x1b[B')}
+              className="w-10 h-10 flex items-center justify-center bg-secondary hover:bg-secondary/80 active:bg-secondary/60 active:scale-95 transition-transform rounded-full text-muted-foreground text-lg"
+            >
+              ˅
+            </button>
           </div>
         </div>
-      )}
+      </div>
 
       {/* Input bar */}
       <div className="shrink-0 bg-[#0a0a0a] safe-area-bottom">
         <div className="flex items-center gap-2 p-3">
-          {/* Plus button - opens unified drawer */}
-          <button
-            type="button"
-            onClick={() => {
-              inputRef.current?.blur();
-              setShowDrawer(true);
-            }}
-            className="w-10 h-10 flex items-center justify-center bg-secondary hover:bg-secondary/80 active:bg-secondary/60 active:scale-95 transition-transform rounded-full text-muted-foreground text-xl shrink-0"
-          >
-            +
-          </button>
-
           {/* Text input - not in a form to avoid password/payment autocomplete */}
           <textarea
             ref={inputRef}
