@@ -1,5 +1,13 @@
 #!/usr/bin/env node
 
+// Check for Bun runtime - node-pty doesn't work with Bun
+if (typeof Bun !== 'undefined') {
+  console.error('\n  Remoto requires Node.js to run.');
+  console.error('  Please use: npx remotosh');
+  console.error('  (bunx is not supported due to native module limitations)\n');
+  process.exit(1);
+}
+
 import os from 'os';
 import fs from 'fs';
 import path from 'path';
