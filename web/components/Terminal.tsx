@@ -286,24 +286,55 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
         onClick={() => inputRef.current?.focus()}
       />
 
-      {/* Yes/No bar - only shows when y/n prompt detected */}
-      {hasYesNoPrompt && (
+      {/* Claude Code toolbar - shows when Claude detected */}
+      {isClaudeCode && (
         <div className="shrink-0 bg-[#0a0a0a] px-3 pt-2">
           <div className="flex items-center gap-2">
+            {/* Slash command button */}
             <button
               type="button"
-              onClick={() => sendAction('y', true)}
-              className="h-10 px-5 bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/80 active:scale-95 transition-transform rounded-full text-sm font-medium"
+              onClick={() => {
+                setInputValue('/');
+                inputRef.current?.focus();
+              }}
+              className="w-10 h-10 flex items-center justify-center bg-secondary hover:bg-secondary/80 active:bg-secondary/60 active:scale-95 transition-transform rounded-full text-muted-foreground text-lg"
             >
-              Yes
+              /
+            </button>
+            {/* Arrow navigation */}
+            <button
+              type="button"
+              onClick={() => onData('\x1b[A')}
+              className="w-10 h-10 flex items-center justify-center bg-secondary hover:bg-secondary/80 active:bg-secondary/60 active:scale-95 transition-transform rounded-full text-foreground text-base"
+            >
+              ↑
             </button>
             <button
               type="button"
-              onClick={() => sendAction('n', true)}
-              className="h-10 px-5 bg-secondary hover:bg-secondary/80 active:bg-secondary/60 active:scale-95 transition-transform rounded-full text-foreground text-sm font-medium"
+              onClick={() => onData('\x1b[B')}
+              className="w-10 h-10 flex items-center justify-center bg-secondary hover:bg-secondary/80 active:bg-secondary/60 active:scale-95 transition-transform rounded-full text-foreground text-base"
             >
-              No
+              ↓
             </button>
+            {/* Yes/No - only when y/n prompt detected */}
+            {hasYesNoPrompt && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => sendAction('y', true)}
+                  className="h-10 px-4 bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/80 active:scale-95 transition-transform rounded-full text-sm font-medium"
+                >
+                  Yes
+                </button>
+                <button
+                  type="button"
+                  onClick={() => sendAction('n', true)}
+                  className="h-10 px-4 bg-secondary hover:bg-secondary/80 active:bg-secondary/60 active:scale-95 transition-transform rounded-full text-foreground text-sm font-medium"
+                >
+                  No
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -321,22 +352,6 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
             className="w-10 h-10 flex items-center justify-center bg-secondary hover:bg-secondary/80 active:bg-secondary/60 active:scale-95 transition-transform rounded-full text-muted-foreground text-xl shrink-0"
           >
             +
-          </button>
-
-          {/* Arrow keys - always visible for navigation */}
-          <button
-            type="button"
-            onClick={() => onData('\x1b[A')}
-            className="w-10 h-10 flex items-center justify-center bg-secondary hover:bg-secondary/80 active:bg-secondary/60 active:scale-95 transition-transform rounded-full text-foreground text-base shrink-0"
-          >
-            ↑
-          </button>
-          <button
-            type="button"
-            onClick={() => onData('\x1b[B')}
-            className="w-10 h-10 flex items-center justify-center bg-secondary hover:bg-secondary/80 active:bg-secondary/60 active:scale-95 transition-transform rounded-full text-foreground text-base shrink-0"
-          >
-            ↓
           </button>
 
           {/* Text input - not in a form to avoid password/payment autocomplete */}
