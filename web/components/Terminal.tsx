@@ -163,7 +163,60 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
         className="flex-1 min-h-0 overflow-auto"
         onClick={() => inputRef.current?.focus()}
       />
-      {/* Fixed input bar at bottom */}
+      {/* Quick actions for Claude Code prompts */}
+      <div className="shrink-0 bg-[#111] border-t border-gray-800 px-3 py-2">
+        <div className="flex items-center gap-2 overflow-x-auto">
+          {/* Arrow navigation for option selection */}
+          <button
+            type="button"
+            onClick={() => onData('\x1b[A')}
+            className="flex items-center gap-1 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-full text-white text-sm"
+          >
+            <span>↑</span>
+            <span className="text-gray-400">Up</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => onData('\x1b[B')}
+            className="flex items-center gap-1 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-full text-white text-sm"
+          >
+            <span>↓</span>
+            <span className="text-gray-400">Down</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => onData('\r')}
+            className="px-3 py-1.5 bg-green-600 hover:bg-green-500 rounded-full text-white text-sm font-medium"
+          >
+            Select ↵
+          </button>
+          <div className="w-px h-6 bg-gray-700" />
+          {/* Common responses */}
+          <button
+            type="button"
+            onClick={() => { onData('y'); setTimeout(() => onData('\r'), 100); }}
+            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded-full text-white text-sm"
+          >
+            Yes
+          </button>
+          <button
+            type="button"
+            onClick={() => { onData('n'); setTimeout(() => onData('\r'), 100); }}
+            className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-full text-white text-sm"
+          >
+            No
+          </button>
+          <button
+            type="button"
+            onClick={() => onData('\x1b')}
+            className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-full text-gray-400 text-sm"
+          >
+            Esc
+          </button>
+        </div>
+      </div>
+
+      {/* Text input bar */}
       <div className="shrink-0 bg-[#0a0a0a] border-t border-gray-800 safe-area-bottom">
         <div className="flex items-end gap-2 p-3">
           <span className="text-green-500 font-mono text-sm pb-2">$</span>
