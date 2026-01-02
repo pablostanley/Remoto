@@ -128,27 +128,19 @@ export default function SettingsPage() {
 
         <div className="bg-card rounded-lg border border-border p-6">
           <h2 className="text-lg font-semibold mb-4">Plan</h2>
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-lg font-medium capitalize">{profile?.plan}</span>
-                {profile?.plan === 'free' && (
-                  <span className="bg-muted text-muted-foreground px-2 py-0.5 rounded text-xs">
-                    Current
-                  </span>
-                )}
-              </div>
-              <p className="text-muted-foreground text-sm mt-1">
-                {profile?.plan === 'free'
-                  ? 'Limited to 100 sessions per month'
-                  : 'Unlimited sessions'}
-              </p>
-            </div>
-            {profile?.plan === 'free' && (
-              <Button variant="secondary">
-                Upgrade to Pro
-              </Button>
-            )}
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-lg font-medium">Free</span>
+            <span className="bg-primary/10 text-primary px-2 py-0.5 rounded text-xs font-medium">
+              Beta
+            </span>
+          </div>
+          <div className="space-y-2 text-sm text-muted-foreground">
+            <p>Pro accounts coming soon. For now, free includes:</p>
+            <ul className="list-disc list-inside space-y-1 ml-1">
+              <li>2 concurrent sessions</li>
+              <li>1 hour session duration</li>
+              <li>Unlimited total sessions</li>
+            </ul>
           </div>
         </div>
 
