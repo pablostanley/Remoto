@@ -141,9 +141,18 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
       /Use arrow keys/i,
       /Press.*↑.*↓/i,
       /navigate.*options/i,
+      /[●○]\s+\w/,               // ● or ○ bullet selection
+      /\d+\.\s+\w.*\n.*\d+\.\s+\w/m, // Numbered list (1. xxx \n 2. xxx)
+      /^\s*>\s+\w/m,             // > selection indicator
+      /choose.*option/i,
+      /select.*from/i,
+      /which.*would you/i,
+      /pick.*one/i,
     ];
     const hasOptions = optionPatterns.some(p => p.test(recentOutput));
-    setHasSelectableOptions(hasOptions);
+    // Also check if Claude Code is active and there's a question mark (likely a prompt)
+    const likelyPrompt = isClaudeDetected && /\?\s*$/.test(recentOutput.trim());
+    setHasSelectableOptions(hasOptions || likelyPrompt);
 
     // Detect yes/no prompts
     const yesNoPatterns = [
@@ -291,7 +300,7 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
   };
 
   // Show contextual top bar?
-  const showContextBar = hasSelectableOptions || hasYesNoPrompt || isClaudeCode;
+  const showContextBar = hasSelectableOptions || hasYesNoPrompt;
 
   return (
     <div className="flex flex-col h-full overflow-hidden relative">
@@ -306,17 +315,6 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
       {showContextBar && (
         <div className="shrink-0 bg-[#0a0a0a] px-3 pt-2">
           <div className="flex items-center gap-2 overflow-x-auto">
-            {/* Claude Code slash command button */}
-            {isClaudeCode && (
-              <button
-                type="button"
-                onClick={() => setShowDrawer(true)}
-                className="h-10 px-4 bg-purple-600 hover:bg-purple-500 active:bg-purple-700 active:scale-95 transition-transform rounded-full text-white text-base font-medium"
-              >
-                /
-              </button>
-            )}
-
             {/* Arrow navigation - shown when options are detected */}
             {hasSelectableOptions && (
               <button
