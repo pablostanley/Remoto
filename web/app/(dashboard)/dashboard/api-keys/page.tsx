@@ -6,6 +6,15 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { nanoid } from 'nanoid';
 
+// Hash API key with SHA-256 (matches server-side hashing)
+async function hashApiKey(key: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(key);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 interface ApiKey {
   id: string;
   name: string;
@@ -50,10 +59,13 @@ export default function ApiKeysPage() {
     const apiKey = `rmt_${nanoid(32)}`;
     const keyPreview = apiKey.substring(0, 12) + '...';
 
+    // Hash the key before storing (SHA-256)
+    const keyHash = await hashApiKey(apiKey);
+
     const { error } = await supabase.from('api_keys').insert({
       user_id: user.id,
       name: newKeyName,
-      key_hash: apiKey, // In production, hash this
+      key_hash: keyHash,
       key_preview: keyPreview,
     });
 

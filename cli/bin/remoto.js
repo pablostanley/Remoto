@@ -11,6 +11,57 @@ const WS_SERVER_URL = process.env.REMOTO_WS_URL || 'wss://remoto-ws.fly.dev';
 const WEB_APP_URL = process.env.REMOTO_WEB_URL || 'https://remoto.sh';
 const API_KEY = process.env.REMOTO_API_KEY;
 
+// Sensitive environment variable patterns to filter out
+const SENSITIVE_ENV_PATTERNS = [
+  /^AWS_/i,
+  /^AZURE_/i,
+  /^GCP_/i,
+  /^GOOGLE_/i,
+  /^GITHUB_TOKEN$/i,
+  /^GH_TOKEN$/i,
+  /^GITLAB_/i,
+  /^NPM_TOKEN$/i,
+  /^NUGET_/i,
+  /^DOCKER_/i,
+  /^KUBERNETES_/i,
+  /^K8S_/i,
+  /SECRET/i,
+  /PASSWORD/i,
+  /PRIVATE_KEY/i,
+  /API_KEY/i,
+  /AUTH_TOKEN/i,
+  /ACCESS_TOKEN/i,
+  /REFRESH_TOKEN/i,
+  /DATABASE_URL/i,
+  /DB_PASSWORD/i,
+  /POSTGRES_/i,
+  /MYSQL_/i,
+  /MONGO_/i,
+  /REDIS_/i,
+  /STRIPE_/i,
+  /TWILIO_/i,
+  /SENDGRID_/i,
+  /MAILGUN_/i,
+  /SUPABASE_/i,
+  /FIREBASE_/i,
+  /OPENAI_/i,
+  /ANTHROPIC_/i,
+  /SLACK_/i,
+  /DISCORD_/i,
+  /^REMOTO_API_KEY$/i,  // Our own API key
+];
+
+// Create sanitized environment for PTY
+function getSanitizedEnv() {
+  const env = { ...process.env };
+  for (const key of Object.keys(env)) {
+    if (SENSITIVE_ENV_PATTERNS.some(pattern => pattern.test(key))) {
+      delete env[key];
+    }
+  }
+  return env;
+}
+
 // Detect shell
 const shell = process.env.SHELL || (os.platform() === 'win32' ? 'powershell.exe' : 'zsh');
 
@@ -133,15 +184,16 @@ function showQRCode() {
 }
 
 function startPTY() {
-  // Initialize PTY
+  // Initialize PTY with sanitized environment (removes secrets)
   console.log(chalk.dim(`  [debug] spawning shell: ${shell}`));
   try {
+    const sanitizedEnv = getSanitizedEnv();
     ptyProcess = pty.spawn(shell, [], {
       name: 'xterm-256color',
       cols,
       rows,
       cwd: process.cwd(),
-      env: process.env,
+      env: sanitizedEnv,
     });
     console.log(chalk.dim(`  [debug] pty spawned successfully, pid: ${ptyProcess.pid}`));
   } catch (err) {

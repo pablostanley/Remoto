@@ -2,11 +2,20 @@ import { WebSocketServer, WebSocket } from 'ws';
 import { createClient } from '@supabase/supabase-js';
 import http from 'http';
 import { nanoid } from 'nanoid';
+import crypto from 'crypto';
 
 // Configuration
 const PORT = process.env.PORT || 8080;
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
+
+// Allowed origins for WebSocket connections
+const ALLOWED_ORIGINS = [
+  'https://remoto.sh',
+  'https://www.remoto.sh',
+  'http://localhost:3000',  // Local dev
+  'http://localhost:3001',
+];
 
 // Initialize Supabase client (service role for server-side operations)
 const supabase = SUPABASE_URL && SUPABASE_SERVICE_KEY
@@ -35,8 +44,27 @@ const server = http.createServer((req, res) => {
   }
 });
 
-// Create WebSocket server
-const wss = new WebSocketServer({ server });
+// Create WebSocket server with origin validation
+const wss = new WebSocketServer({
+  server,
+  verifyClient: (info, callback) => {
+    const origin = info.origin || info.req.headers.origin;
+
+    // CLI connections don't have an origin (they're from Node.js)
+    if (!origin) {
+      callback(true);
+      return;
+    }
+
+    // Check if origin is allowed
+    if (ALLOWED_ORIGINS.includes(origin)) {
+      callback(true);
+    } else {
+      console.log(`[Security] Rejected connection from origin: ${origin}`);
+      callback(false, 403, 'Origin not allowed');
+    }
+  }
+});
 
 // Validate API key and get user ID
 async function validateApiKey(apiKey) {
@@ -67,10 +95,10 @@ async function validateApiKey(apiKey) {
   return data.user_id;
 }
 
-// Simple hash for API key (in production, use bcrypt or similar)
+// Hash API key with SHA-256 (deterministic for lookups)
+// This is the standard approach for API keys (used by Stripe, GitHub, etc.)
 function hashApiKey(key) {
-  // For now, just return the key - in production, hash it
-  return key;
+  return crypto.createHash('sha256').update(key).digest('hex');
 }
 
 // Handle new WebSocket connections

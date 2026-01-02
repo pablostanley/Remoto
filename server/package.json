@@ -9,8 +9,9 @@
     "start": "node src/index.js"
   },
   "dependencies": {
-    "ws": "^8.18.0",
     "@supabase/supabase-js": "^2.47.12",
-    "nanoid": "^5.0.4"
+    "crypto-js": "^4.2.0",
+    "nanoid": "^5.0.4",
+    "ws": "^8.18.0"
   }
 }
