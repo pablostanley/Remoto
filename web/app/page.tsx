@@ -103,9 +103,7 @@ export default function Home() {
       </div>
 
       <footer className="mt-24 text-sm text-muted-foreground">
-        <Link href="/docs" className="hover:text-foreground transition-colors">Docs</Link>
-        <span className="mx-3">·</span>
-        <Link href="https://github.com/pablostanley/Remoto" className="hover:text-foreground transition-colors">GitHub</Link>
+        made by <a href="https://x.com/pablostanley" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">pablo stanley</a>
       </footer>
     </main>
   );

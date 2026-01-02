@@ -3,7 +3,34 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: 'Remoto - Terminal in your pocket',
-  description: 'Control your terminal from your phone',
+  description: 'Control your terminal from your phone. Run commands, monitor output, and get notifications when tasks complete. No account required.',
+  keywords: ['terminal', 'remote terminal', 'mobile terminal', 'ssh', 'command line', 'cli', 'phone terminal', 'remote access', 'developer tools'],
+  authors: [{ name: 'Pablo Stanley', url: 'https://x.com/pablostanley' }],
+  creator: 'Pablo Stanley',
+  metadataBase: new URL('https://remoto.sh'),
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: 'https://remoto.sh',
+    title: 'Remoto - Terminal in your pocket',
+    description: 'Control your terminal from your phone. Run commands, monitor output, and get notifications when tasks complete.',
+    siteName: 'Remoto',
+    images: [
+      {
+        url: '/remoto-og.png',
+        width: 1200,
+        height: 630,
+        alt: 'Remoto - Terminal in your pocket',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Remoto - Terminal in your pocket',
+    description: 'Control your terminal from your phone. Run commands, monitor output, and get notifications when tasks complete.',
+    images: ['/remoto-og.png'],
+    creator: '@pablostanley',
+  },
   manifest: '/manifest.json',
   icons: {
     icon: [
