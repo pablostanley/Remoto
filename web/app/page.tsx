@@ -1,6 +1,7 @@
 'use client';
 
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 
@@ -16,7 +17,10 @@ export default function Home() {
   return (
     <main className="min-h-screen p-8 md:p-16 max-w-2xl mx-auto">
       <nav className="flex items-center justify-between mb-16">
-        <span className="text-lg font-medium">remoto</span>
+        <div className="flex items-center gap-2">
+          <Image src="/logo.svg" alt="Remoto" width={28} height={28} />
+          <span className="text-lg font-medium">remoto</span>
+        </div>
         <div className="flex items-center gap-4">
           <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
             Log in
