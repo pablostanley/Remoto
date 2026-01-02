@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { TacoLogo } from '@/components/TacoLogo';
+import { Button } from '@/components/ui/button';
 
 function VerifyEmailContent() {
   const [checking, setChecking] = useState(false);
@@ -50,29 +51,30 @@ function VerifyEmailContent() {
         </div>
 
         <h1 className="text-2xl font-bold mb-2">Check your email</h1>
-        <p className="text-gray-400 mb-6">
+        <p className="text-muted-foreground mb-6">
           We sent a confirmation link to{' '}
-          {email ? <span className="text-white">{email}</span> : 'your email'}
+          {email ? <span className="text-foreground">{email}</span> : 'your email'}
         </p>
 
-        <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 mb-6">
-          <p className="text-sm text-gray-400">
+        <div className="bg-card border border-border rounded-lg p-4 mb-6">
+          <p className="text-sm text-muted-foreground">
             Click the link in your email to confirm your account. This page will automatically redirect once confirmed.
           </p>
         </div>
 
         <div className="space-y-3">
-          <button
+          <Button
+            variant="secondary"
             onClick={handleResend}
             disabled={checking || !email}
-            className="w-full bg-gray-800 hover:bg-gray-700 text-white py-3 px-4 rounded-lg font-medium transition-colors disabled:opacity-50"
+            className="w-full"
           >
             {checking ? 'Sending...' : 'Resend email'}
-          </button>
+          </Button>
 
           <button
             onClick={() => router.push('/login')}
-            className="w-full text-gray-400 hover:text-white py-2 text-sm transition-colors"
+            className="w-full text-muted-foreground hover:text-foreground py-2 text-sm transition-colors"
           >
             Back to sign in
           </button>
@@ -91,7 +93,7 @@ export default function VerifyEmailPage() {
             <TacoLogo size={64} />
           </div>
           <h1 className="text-2xl font-bold mb-2">Check your email</h1>
-          <p className="text-gray-400">Loading...</p>
+          <p className="text-muted-foreground">Loading...</p>
         </div>
       </main>
     }>

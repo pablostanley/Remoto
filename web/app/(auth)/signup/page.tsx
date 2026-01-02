@@ -7,6 +7,9 @@ import { createClient } from '@/utils/supabase/client';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { TacoLogo } from '@/components/TacoLogo';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export default function SignupPage() {
   const [email, setEmail] = useState('');
@@ -44,59 +47,49 @@ export default function SignupPage() {
             <TacoLogo size={48} />
           </div>
           <h1 className="text-3xl font-bold mb-2">Create an account</h1>
-          <p className="text-gray-400">Get started with Remoto</p>
+          <p className="text-muted-foreground">Get started with Remoto</p>
         </div>
 
         <form onSubmit={handleSignup} className="space-y-4">
           {error && (
-            <div className="bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-3 rounded-lg text-sm">
+            <div className="bg-destructive/10 border border-destructive/50 text-destructive px-4 py-3 rounded-lg text-sm">
               {error}
             </div>
           )}
 
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-400 mb-1">
-              Email
-            </label>
-            <input
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="you@example.com"
               required
             />
           </div>
 
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-400 mb-1">
-              Password
-            </label>
-            <input
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
+            <Input
               id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="••••••••"
               minLength={8}
               required
             />
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
+          <Button type="submit" className="w-full" disabled={loading}>
             {loading ? 'Creating account...' : 'Create account'}
-          </button>
+          </Button>
         </form>
 
-        <p className="mt-6 text-center text-gray-400 text-sm">
+        <p className="mt-6 text-center text-muted-foreground text-sm">
           Already have an account?{' '}
-          <Link href="/login" className="text-blue-400 hover:text-blue-300">
+          <Link href="/login" className="text-foreground hover:underline">
             Sign in
           </Link>
         </p>

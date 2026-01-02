@@ -7,6 +7,9 @@ import { createClient } from '@/utils/supabase/client';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { TacoLogo } from '@/components/TacoLogo';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -42,63 +45,53 @@ export default function LoginPage() {
             <TacoLogo size={48} />
           </div>
           <h1 className="text-3xl font-bold mb-2">Welcome back</h1>
-          <p className="text-gray-400">Sign in to your Remoto account</p>
+          <p className="text-muted-foreground">Sign in to your Remoto account</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-4">
           {error && (
-            <div className="bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-3 rounded-lg text-sm">
+            <div className="bg-destructive/10 border border-destructive/50 text-destructive px-4 py-3 rounded-lg text-sm">
               {error}
             </div>
           )}
 
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-400 mb-1">
-              Email
-            </label>
-            <input
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="you@example.com"
               required
             />
           </div>
 
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <label htmlFor="password" className="block text-sm font-medium text-gray-400">
-                Password
-              </label>
-              <Link href="/forgot-password" className="text-sm text-blue-400 hover:text-blue-300">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password">Password</Label>
+              <Link href="/forgot-password" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 Forgot password?
               </Link>
             </div>
-            <input
+            <Input
               id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="••••••••"
               required
             />
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
+          <Button type="submit" className="w-full" disabled={loading}>
             {loading ? 'Signing in...' : 'Sign in'}
-          </button>
+          </Button>
         </form>
 
-        <p className="mt-6 text-center text-gray-400 text-sm">
+        <p className="mt-6 text-center text-muted-foreground text-sm">
           Don&apos;t have an account?{' '}
-          <Link href="/signup" className="text-blue-400 hover:text-blue-300">
+          <Link href="/signup" className="text-foreground hover:underline">
             Sign up
           </Link>
         </p>

@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { TacoLogo } from '@/components/TacoLogo';
+import { Button } from '@/components/ui/button';
 
 function CLIAuthContent() {
   const [authorizing, setAuthorizing] = useState(false);
@@ -65,7 +66,7 @@ function CLIAuthContent() {
             <TacoLogo size={64} />
           </div>
           <h1 className="text-2xl font-bold mb-2">Invalid request</h1>
-          <p className="text-gray-400">No device code provided</p>
+          <p className="text-muted-foreground">No device code provided</p>
         </div>
       </main>
     );
@@ -78,9 +79,9 @@ function CLIAuthContent() {
           <div className="flex justify-center mb-6">
             <TacoLogo size={64} />
           </div>
-          <div className="text-green-400 text-5xl mb-4">✓</div>
+          <div className="text-5xl mb-4">✓</div>
           <h1 className="text-2xl font-bold mb-2">Authorized!</h1>
-          <p className="text-gray-400 mb-6">
+          <p className="text-muted-foreground mb-6">
             You can close this window and return to your terminal.
           </p>
         </div>
@@ -95,7 +96,7 @@ function CLIAuthContent() {
           <div className="flex justify-center mb-6">
             <TacoLogo size={64} />
           </div>
-          <p className="text-gray-400">Loading...</p>
+          <p className="text-muted-foreground">Loading...</p>
         </div>
       </main>
     );
@@ -109,33 +110,29 @@ function CLIAuthContent() {
         </div>
 
         <h1 className="text-2xl font-bold mb-2">Authorize CLI</h1>
-        <p className="text-gray-400 mb-6">
+        <p className="text-muted-foreground mb-6">
           The Remoto CLI is requesting access to your account
         </p>
 
-        <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 mb-6">
-          <p className="text-sm text-gray-400 mb-1">Logged in as</p>
-          <p className="text-white font-medium">{user.email}</p>
+        <div className="bg-card border border-border rounded-lg p-4 mb-6">
+          <p className="text-sm text-muted-foreground mb-1">Logged in as</p>
+          <p className="text-foreground font-medium">{user.email}</p>
         </div>
 
         {error && (
-          <div className="bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-3 rounded-lg text-sm mb-4">
+          <div className="bg-destructive/10 border border-destructive/50 text-destructive px-4 py-3 rounded-lg text-sm mb-4">
             {error}
           </div>
         )}
 
         <div className="space-y-3">
-          <button
-            onClick={handleAuthorize}
-            disabled={authorizing}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg font-medium transition-colors disabled:opacity-50"
-          >
+          <Button onClick={handleAuthorize} disabled={authorizing} className="w-full">
             {authorizing ? 'Authorizing...' : 'Authorize'}
-          </button>
+          </Button>
 
           <button
             onClick={handleCancel}
-            className="w-full text-gray-400 hover:text-white py-2 text-sm transition-colors"
+            className="w-full text-muted-foreground hover:text-foreground py-2 text-sm transition-colors"
           >
             Cancel
           </button>
@@ -153,7 +150,7 @@ export default function CLIAuthPage() {
           <div className="flex justify-center mb-6">
             <TacoLogo size={64} />
           </div>
-          <p className="text-gray-400">Loading...</p>
+          <p className="text-muted-foreground">Loading...</p>
         </div>
       </main>
     }>
