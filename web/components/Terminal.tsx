@@ -11,6 +11,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
+import { Plus, CaretUp, CaretDown } from '@phosphor-icons/react';
 
 // Quick actions (shown in drawer)
 const QUICK_ACTIONS = [
@@ -296,9 +297,9 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
               inputRef.current?.blur();
               setShowDrawer(true);
             }}
-            className="w-10 h-10 flex items-center justify-center bg-secondary hover:bg-secondary/80 active:bg-secondary/60 active:scale-95 transition-transform rounded-full text-muted-foreground text-xl"
+            className="w-10 h-10 flex items-center justify-center bg-secondary hover:bg-secondary/80 active:bg-secondary/60 active:scale-95 transition-transform rounded-full text-muted-foreground"
           >
-            +
+            <Plus size={22} weight="bold" />
           </button>
 
           {/* Right side: Caret navigation */}
@@ -325,16 +326,16 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
             <button
               type="button"
               onClick={() => onData('\x1b[A')}
-              className="w-10 h-10 flex items-center justify-center bg-secondary hover:bg-secondary/80 active:bg-secondary/60 active:scale-95 transition-transform rounded-full text-muted-foreground text-lg"
+              className="w-10 h-10 flex items-center justify-center bg-secondary hover:bg-secondary/80 active:bg-secondary/60 active:scale-95 transition-transform rounded-full text-muted-foreground"
             >
-              ˄
+              <CaretUp size={22} weight="bold" />
             </button>
             <button
               type="button"
               onClick={() => onData('\x1b[B')}
-              className="w-10 h-10 flex items-center justify-center bg-secondary hover:bg-secondary/80 active:bg-secondary/60 active:scale-95 transition-transform rounded-full text-muted-foreground text-lg"
+              className="w-10 h-10 flex items-center justify-center bg-secondary hover:bg-secondary/80 active:bg-secondary/60 active:scale-95 transition-transform rounded-full text-muted-foreground"
             >
-              ˅
+              <CaretDown size={22} weight="bold" />
             </button>
           </div>
         </div>
