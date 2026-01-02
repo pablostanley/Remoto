@@ -416,22 +416,25 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
 
       {/* Text input bar */}
       <div className="shrink-0 bg-[#0a0a0a] border-t border-gray-800 safe-area-bottom">
-        <div className="flex items-end gap-2 p-3">
+        <form autoComplete="off" onSubmit={(e) => { e.preventDefault(); handleSend(); }} className="flex items-end gap-2 p-3">
           <span className="text-green-500 font-mono text-sm pb-2">$</span>
           <textarea
             ref={inputRef}
+            name="terminal-command-input"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="type command..."
             autoCapitalize="off"
             autoCorrect="off"
-            autoComplete="off"
+            autoComplete="new-password"
             spellCheck={false}
             inputMode="text"
             enterKeyHint="done"
             data-form-type="other"
             data-lpignore="true"
+            data-1p-ignore="true"
+            aria-autocomplete="none"
             rows={1}
             className="flex-1 bg-transparent text-white font-mono text-sm focus:outline-none placeholder:text-gray-600 resize-none min-h-[24px] max-h-[120px]"
             style={{ height: 'auto', overflow: 'hidden' }}
@@ -449,13 +452,12 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
             ^C
           </button>
           <button
-            type="button"
-            onClick={handleSend}
+            type="submit"
             className="px-3 py-1 bg-white text-black rounded text-sm font-medium"
           >
             Send
           </button>
-        </div>
+        </form>
       </div>
     </div>
   );
