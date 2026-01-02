@@ -20,6 +20,7 @@ export default function Home() {
         <div className="flex items-center gap-2">
           <Image src="/logo.svg" alt="Remoto" width={28} height={28} />
           <span className="text-lg font-medium">remoto</span>
+          <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-muted text-muted-foreground">beta</span>
         </div>
         <div className="flex items-center gap-4">
           <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
@@ -38,7 +39,7 @@ export default function Home() {
 
         <p className="text-muted-foreground text-lg leading-relaxed">
           Run commands, monitor output, and get notifications when tasks complete.
-          No account required.
+          No account required. Still experimental.
         </p>
 
         <div className="pt-4 space-y-6">
@@ -103,7 +104,7 @@ export default function Home() {
       </div>
 
       <footer className="mt-24 text-sm text-muted-foreground">
-        made by <a href="https://x.com/pablostanley" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">pablo stanley</a>
+        send feedback to <a href="https://x.com/pablostanley" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">pablo stanley</a>
       </footer>
     </main>
   );
