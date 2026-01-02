@@ -103,7 +103,7 @@ export default function Home() {
         <div className="pt-8 flex flex-col gap-3 text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
             <span className="w-1 h-1 rounded-full bg-muted-foreground"></span>
-            <span>Optimized for AI agents like Claude Code</span>
+            <span>Optimized for AI agents like <a href="https://claude.ai/download" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">Claude Code</a> or <a href="https://v0.dev" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">v0</a></span>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-1 h-1 rounded-full bg-muted-foreground"></span>
