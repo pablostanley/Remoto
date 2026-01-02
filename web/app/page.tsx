@@ -9,6 +9,7 @@ import { Check, Copy } from "@phosphor-icons/react";
 
 export default function Home() {
   const [copied, setCopied] = useState(false);
+  const [copiedGlobal, setCopiedGlobal] = useState(false);
   const [user, setUser] = useState<{ email?: string } | null>(null);
   const supabase = createClient();
 
@@ -22,6 +23,12 @@ export default function Home() {
     await navigator.clipboard.writeText('npx remotosh');
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleCopyGlobal = async () => {
+    await navigator.clipboard.writeText('npm install -g remotosh');
+    setCopiedGlobal(true);
+    setTimeout(() => setCopiedGlobal(false), 2000);
   };
 
   return (
@@ -117,7 +124,20 @@ export default function Home() {
 
         <div className="pt-6 text-sm text-muted-foreground">
           <p>Having trouble? Try installing globally:</p>
-          <code className="block mt-2 text-foreground bg-muted px-3 py-2 rounded-md font-mono text-xs">npm install -g remotosh</code>
+          <div className="mt-2 bg-muted rounded-md px-3 py-2 font-mono text-xs flex items-center justify-between gap-2">
+            <code className="text-foreground">npm install -g remotosh</code>
+            <button
+              onClick={handleCopyGlobal}
+              className="text-muted-foreground hover:text-foreground transition-colors p-1"
+              title="Copy to clipboard"
+            >
+              {copiedGlobal ? (
+                <Check size={14} weight="bold" />
+              ) : (
+                <Copy size={14} />
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
