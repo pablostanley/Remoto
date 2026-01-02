@@ -90,15 +90,15 @@ export default function Home() {
         <div className="pt-8 flex flex-col gap-3 text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
             <span className="w-1 h-1 rounded-full bg-muted-foreground"></span>
+            <span>Optimized for AI agents like Claude Code</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-1 h-1 rounded-full bg-muted-foreground"></span>
             <span>Real-time terminal streaming</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-1 h-1 rounded-full bg-muted-foreground"></span>
             <span>Touch-friendly keyboard</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-1 h-1 rounded-full bg-muted-foreground"></span>
-            <span>End-to-end encrypted</span>
           </div>
         </div>
       </div>
