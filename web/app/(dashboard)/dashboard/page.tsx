@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { createClient } from '@/utils/supabase/server';
 import Link from 'next/link';
+import { ArrowRight } from '@phosphor-icons/react/dist/ssr';
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -108,9 +109,9 @@ export default async function DashboardPage() {
           <h2 className="text-lg font-semibold">Recent Sessions</h2>
           <Link
             href="/dashboard/sessions"
-            className="text-muted-foreground hover:text-foreground text-sm transition-colors"
+            className="text-muted-foreground hover:text-foreground text-sm transition-colors flex items-center gap-1"
           >
-            View all →
+            View all <ArrowRight size={14} />
           </Link>
         </div>
         {recentSessions && recentSessions.length > 0 ? (

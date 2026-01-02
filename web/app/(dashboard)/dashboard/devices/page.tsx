@@ -15,6 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Terminal } from '@phosphor-icons/react';
 
 interface CliToken {
   id: string;
@@ -144,9 +145,7 @@ export default function DevicesPage() {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 bg-muted rounded flex items-center justify-center">
-                        <svg className="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
+                        <Terminal size={16} className="text-muted-foreground" />
                       </div>
                       <div>
                         <div className="font-medium">Terminal</div>

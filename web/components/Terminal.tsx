@@ -11,7 +11,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
-import { Plus, CaretUp, CaretDown } from '@phosphor-icons/react';
+import { Plus, CaretUp, CaretDown, ArrowUp } from '@phosphor-icons/react';
 
 // Quick actions (shown in drawer)
 const QUICK_ACTIONS = [
@@ -379,9 +379,7 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
             onClick={handleSend}
             className="w-10 h-10 flex items-center justify-center bg-primary text-primary-foreground rounded-full hover:bg-primary/90 active:bg-primary/80 active:scale-95 transition-transform shrink-0"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z"/>
-            </svg>
+            <ArrowUp size={20} weight="bold" />
           </button>
         </div>
       </div>

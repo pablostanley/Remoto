@@ -5,6 +5,7 @@ import { createClient } from '@/utils/supabase/client';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { TacoLogo } from '@/components/TacoLogo';
 import { Button } from '@/components/ui/button';
+import { CheckCircle } from '@phosphor-icons/react';
 
 function CLIAuthContent() {
   const [authorizing, setAuthorizing] = useState(false);
@@ -79,7 +80,7 @@ function CLIAuthContent() {
           <div className="flex justify-center mb-6">
             <TacoLogo size={64} />
           </div>
-          <div className="text-5xl mb-4">✓</div>
+          <CheckCircle size={48} weight="fill" className="text-primary mx-auto mb-4" />
           <h1 className="text-2xl font-bold mb-2">Authorized!</h1>
           <p className="text-muted-foreground mb-6">
             You can close this window and return to your terminal.

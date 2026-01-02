@@ -11,6 +11,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
+import { DotsThreeVertical, XSquare, Link, ArrowClockwise, Power } from '@phosphor-icons/react';
 
 // Dynamic import to avoid SSR issues with xterm
 const Terminal = nextDynamic(() => import('@/components/Terminal'), {
@@ -313,11 +314,7 @@ export default function SessionPage() {
           onClick={() => setShowMenu(true)}
           className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-secondary active:bg-secondary/80 transition-colors"
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground">
-            <circle cx="12" cy="12" r="1" />
-            <circle cx="12" cy="5" r="1" />
-            <circle cx="12" cy="19" r="1" />
-          </svg>
+          <DotsThreeVertical size={20} weight="bold" className="text-muted-foreground" />
         </button>
       </div>
 
@@ -349,11 +346,7 @@ export default function SessionPage() {
               onClick={handleClearTerminal}
               className="w-full flex items-center gap-4 px-4 py-4 bg-card hover:bg-card/80 active:bg-card/60 border border-border rounded-xl text-left"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                <line x1="9" y1="9" x2="15" y2="15" />
-                <line x1="15" y1="9" x2="9" y2="15" />
-              </svg>
+              <XSquare size={20} className="text-muted-foreground" />
               <div>
                 <div className="text-foreground text-sm font-medium">Clear Terminal</div>
                 <div className="text-muted-foreground text-xs">Clear the screen</div>
@@ -365,10 +358,7 @@ export default function SessionPage() {
               onClick={handleCopyLink}
               className="w-full flex items-center gap-4 px-4 py-4 bg-card hover:bg-card/80 active:bg-card/60 border border-border rounded-xl text-left"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground">
-                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-              </svg>
+              <Link size={20} className="text-muted-foreground" />
               <div>
                 <div className="text-foreground text-sm font-medium">Copy Session Link</div>
                 <div className="text-muted-foreground text-xs">Share this session URL</div>
@@ -381,10 +371,7 @@ export default function SessionPage() {
                 onClick={handleReconnect}
                 className="w-full flex items-center gap-4 px-4 py-4 bg-card hover:bg-card/80 active:bg-card/60 border border-border rounded-xl text-left"
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground">
-                  <polyline points="23 4 23 10 17 10" />
-                  <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
-                </svg>
+                <ArrowClockwise size={20} className="text-muted-foreground" />
                 <div>
                   <div className="text-foreground text-sm font-medium">Reconnect</div>
                   <div className="text-muted-foreground text-xs">Try to reconnect to the session</div>
@@ -403,10 +390,7 @@ export default function SessionPage() {
               onClick={handleEndSession}
               className="w-full flex items-center gap-4 px-4 py-4 bg-destructive/10 hover:bg-destructive/20 active:bg-destructive/30 border border-destructive/30 rounded-xl text-left mt-4"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-destructive">
-                <path d="M18.36 6.64a9 9 0 1 1-12.73 0" />
-                <line x1="12" y1="2" x2="12" y2="12" />
-              </svg>
+              <Power size={20} className="text-destructive" />
               <div>
                 <div className="text-destructive text-sm font-medium">End Session</div>
                 <div className="text-destructive/60 text-xs">Disconnect and close this session</div>
