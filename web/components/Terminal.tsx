@@ -77,7 +77,6 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
 
   // Detection states
   const [isClaudeCode, setIsClaudeCode] = useState(false);
-  const [hasSelectableOptions, setHasSelectableOptions] = useState(false);
   const [hasYesNoPrompt, setHasYesNoPrompt] = useState(false);
 
   // UI states
@@ -128,31 +127,10 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
     // Get last ~500 chars for recent context
     const recentOutput = buffer.slice(-500);
 
-    // Detect Claude Code
+    // Detect Claude Code (for showing Claude commands in drawer)
     const claudePatterns = ['Claude Code', 'claude-code', 'Opus 4', 'Sonnet 4', 'Haiku'];
     const isClaudeDetected = claudePatterns.some(p => buffer.includes(p));
     setIsClaudeCode(isClaudeDetected);
-
-    // Detect selectable options (arrow navigation needed)
-    const optionPatterns = [
-      /[❯>]\s+\d+\./m,           // ❯ 1. or > 1.
-      /\[\s*[xX\s]\s*\]/,        // [ ] or [x] checkboxes
-      /\(\s*[*\s]\s*\)/,         // ( ) or (*) radio buttons
-      /Use arrow keys/i,
-      /Press.*↑.*↓/i,
-      /navigate.*options/i,
-      /[●○]\s+\w/,               // ● or ○ bullet selection
-      /\d+\.\s+\w.*\n.*\d+\.\s+\w/m, // Numbered list (1. xxx \n 2. xxx)
-      /^\s*>\s+\w/m,             // > selection indicator
-      /choose.*option/i,
-      /select.*from/i,
-      /which.*would you/i,
-      /pick.*one/i,
-    ];
-    const hasOptions = optionPatterns.some(p => p.test(recentOutput));
-    // Also check if Claude Code is active and there's a question mark (likely a prompt)
-    const likelyPrompt = isClaudeDetected && /\?\s*$/.test(recentOutput.trim());
-    setHasSelectableOptions(hasOptions || likelyPrompt);
 
     // Detect yes/no prompts
     const yesNoPatterns = [
@@ -299,9 +277,6 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
     }
   };
 
-  // Show contextual top bar?
-  const showContextBar = hasSelectableOptions || hasYesNoPrompt;
-
   return (
     <div className="flex flex-col h-full overflow-hidden relative">
       {/* Terminal output area */}
@@ -311,56 +286,31 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
         onClick={() => inputRef.current?.focus()}
       />
 
-      {/* Contextual action bar - only shows when relevant */}
-      {showContextBar && (
+      {/* Yes/No bar - only shows when y/n prompt detected */}
+      {hasYesNoPrompt && (
         <div className="shrink-0 bg-[#0a0a0a] px-3 pt-2">
-          <div className="flex items-center gap-2 overflow-x-auto">
-            {/* Arrow navigation - shown when options are detected */}
-            {hasSelectableOptions && (
-              <button
-                type="button"
-                onClick={() => onData('\x1b[A')}
-                className="h-10 px-4 bg-secondary hover:bg-secondary/80 active:bg-secondary/60 active:scale-95 transition-transform rounded-full text-foreground text-base"
-              >
-                ↑
-              </button>
-            )}
-            {hasSelectableOptions && (
-              <button
-                type="button"
-                onClick={() => onData('\x1b[B')}
-                className="h-10 px-4 bg-secondary hover:bg-secondary/80 active:bg-secondary/60 active:scale-95 transition-transform rounded-full text-foreground text-base"
-              >
-                ↓
-              </button>
-            )}
-
-            {/* Yes/No - shown when y/n prompt detected */}
-            {hasYesNoPrompt && (
-              <button
-                type="button"
-                onClick={() => sendAction('y', true)}
-                className="h-10 px-5 bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/80 active:scale-95 transition-transform rounded-full text-sm font-medium"
-              >
-                Yes
-              </button>
-            )}
-            {hasYesNoPrompt && (
-              <button
-                type="button"
-                onClick={() => sendAction('n', true)}
-                className="h-10 px-5 bg-secondary hover:bg-secondary/80 active:bg-secondary/60 active:scale-95 transition-transform rounded-full text-foreground text-sm font-medium"
-              >
-                No
-              </button>
-            )}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => sendAction('y', true)}
+              className="h-10 px-5 bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/80 active:scale-95 transition-transform rounded-full text-sm font-medium"
+            >
+              Yes
+            </button>
+            <button
+              type="button"
+              onClick={() => sendAction('n', true)}
+              className="h-10 px-5 bg-secondary hover:bg-secondary/80 active:bg-secondary/60 active:scale-95 transition-transform rounded-full text-foreground text-sm font-medium"
+            >
+              No
+            </button>
           </div>
         </div>
       )}
 
       {/* Input bar */}
       <div className="shrink-0 bg-[#0a0a0a] safe-area-bottom">
-        <form autoComplete="off" onSubmit={(e) => { e.preventDefault(); handleSend(); }} className="flex items-center gap-2 p-3">
+        <div className="flex items-center gap-2 p-3">
           {/* Plus button - opens unified drawer */}
           <button
             type="button"
@@ -373,30 +323,41 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
             +
           </button>
 
-          {/* Hidden field to trick password managers */}
-          <input type="text" name="fake-field" autoComplete="off" style={{ display: 'none' }} tabIndex={-1} />
+          {/* Arrow keys - always visible for navigation */}
+          <button
+            type="button"
+            onClick={() => onData('\x1b[A')}
+            className="w-10 h-10 flex items-center justify-center bg-secondary hover:bg-secondary/80 active:bg-secondary/60 active:scale-95 transition-transform rounded-full text-foreground text-base shrink-0"
+          >
+            ↑
+          </button>
+          <button
+            type="button"
+            onClick={() => onData('\x1b[B')}
+            className="w-10 h-10 flex items-center justify-center bg-secondary hover:bg-secondary/80 active:bg-secondary/60 active:scale-95 transition-transform rounded-full text-foreground text-base shrink-0"
+          >
+            ↓
+          </button>
 
-          {/* Text input */}
+          {/* Text input - not in a form to avoid password/payment autocomplete */}
           <textarea
             ref={inputRef}
-            id="remoto-terminal-input"
-            name="remoto-terminal-input"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleKeyDown}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+              } else {
+                handleKeyDown(e);
+              }
+            }}
             placeholder="Type a message..."
-            autoCapitalize="off"
-            autoCorrect="off"
-            autoComplete="off"
-            spellCheck={false}
+            autoCapitalize="sentences"
+            autoCorrect="on"
+            spellCheck={true}
             inputMode="text"
             enterKeyHint="send"
-            data-form-type="other"
-            data-lpignore="true"
-            data-1p-ignore="true"
-            data-bwignore="true"
-            data-protonpass-ignore="true"
-            aria-autocomplete="none"
             rows={1}
             className="flex-1 bg-card text-foreground text-base px-4 py-3 rounded-2xl border border-border focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground resize-none min-h-[48px] max-h-[120px]"
             style={{ overflow: 'hidden' }}
@@ -407,16 +368,17 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
             }}
           />
 
-          {/* Send button (also works as Return) */}
+          {/* Send button */}
           <button
-            type="submit"
+            type="button"
+            onClick={handleSend}
             className="w-10 h-10 flex items-center justify-center bg-primary text-primary-foreground rounded-full hover:bg-primary/90 active:bg-primary/80 active:scale-95 transition-transform shrink-0"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
               <path d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z"/>
             </svg>
           </button>
-        </form>
+        </div>
       </div>
 
       {/* Unified drawer */}
