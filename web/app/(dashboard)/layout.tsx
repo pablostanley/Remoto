@@ -41,7 +41,7 @@ export default function DashboardLayout({
   const navItems = [
     { href: '/dashboard', label: 'Overview' },
     { href: '/dashboard/sessions', label: 'Sessions' },
-    { href: '/dashboard/api-keys', label: 'API Keys' },
+    { href: '/dashboard/devices', label: 'Devices' },
     { href: '/dashboard/settings', label: 'Settings' },
   ];
 

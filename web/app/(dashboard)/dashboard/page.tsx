@@ -31,11 +31,10 @@ export default async function DashboardPage() {
     .gte('period_start', startOfMonth.toISOString().split('T')[0])
     .single();
 
-  const { count: apiKeyCount } = await supabase
-    .from('api_keys')
+  const { count: deviceCount } = await supabase
+    .from('cli_tokens')
     .select('*', { count: 'exact', head: true })
-    .eq('user_id', user?.id)
-    .eq('is_active', true);
+    .eq('user_id', user?.id);
 
   return (
     <div>
@@ -60,8 +59,8 @@ export default async function DashboardPage() {
           </div>
         </div>
         <div className="bg-card rounded-lg p-6 border border-border">
-          <div className="text-muted-foreground text-sm mb-1">Active API keys</div>
-          <div className="text-3xl font-bold">{apiKeyCount || 0}</div>
+          <div className="text-muted-foreground text-sm mb-1">Logged in devices</div>
+          <div className="text-3xl font-bold">{deviceCount || 0}</div>
         </div>
       </div>
 
@@ -73,16 +72,10 @@ export default async function DashboardPage() {
               1
             </div>
             <div>
-              <div className="font-medium mb-1">Create an API key</div>
-              <p className="text-muted-foreground text-sm mb-2">
-                You need an API key to authenticate the CLI
-              </p>
-              <Link
-                href="/dashboard/api-keys"
-                className="text-muted-foreground hover:text-foreground text-sm transition-colors"
-              >
-                Go to API Keys →
-              </Link>
+              <div className="font-medium mb-1">Run Remoto in your terminal</div>
+              <code className="bg-muted px-3 py-1 rounded text-sm">
+                npx remotosh
+              </code>
             </div>
           </div>
           <div className="flex items-start gap-4">
@@ -90,10 +83,10 @@ export default async function DashboardPage() {
               2
             </div>
             <div>
-              <div className="font-medium mb-1">Set your API key</div>
-              <code className="bg-muted px-3 py-1 rounded text-sm">
-                export REMOTO_API_KEY=&quot;your-key&quot;
-              </code>
+              <div className="font-medium mb-1">Log in when prompted</div>
+              <p className="text-muted-foreground text-sm">
+                A browser window will open for you to log in (first time only)
+              </p>
             </div>
           </div>
           <div className="flex items-start gap-4">
@@ -101,12 +94,9 @@ export default async function DashboardPage() {
               3
             </div>
             <div>
-              <div className="font-medium mb-1">Start a session</div>
-              <code className="bg-muted px-3 py-1 rounded text-sm">
-                npx remotosh
-              </code>
-              <p className="text-muted-foreground text-sm mt-2">
-                Scan the QR code with your phone to connect
+              <div className="font-medium mb-1">Scan the QR code</div>
+              <p className="text-muted-foreground text-sm">
+                Open the link on your phone to control your terminal
               </p>
             </div>
           </div>

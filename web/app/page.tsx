@@ -39,7 +39,7 @@ export default function Home() {
 
         <p className="text-muted-foreground text-lg leading-relaxed">
           Run commands, monitor output, and get notifications when tasks complete.
-          No account required. Still experimental.
+          Free to use. Still experimental.
         </p>
 
         <div className="pt-4 space-y-6">

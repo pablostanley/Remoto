@@ -11,7 +11,7 @@ import { randomBytes } from 'crypto';
 
 // Configuration
 const WS_SERVER_URL = process.env.REMOTO_WS_URL || 'wss://remoto-ws.fly.dev';
-const WEB_APP_URL = process.env.REMOTO_WEB_URL || 'https://remoto.sh';
+const WEB_APP_URL = process.env.REMOTO_WEB_URL || 'https://www.remoto.sh';
 const CONFIG_DIR = path.join(os.homedir(), '.remoto');
 const CONFIG_FILE = path.join(CONFIG_DIR, 'config.json');
 
