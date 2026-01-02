@@ -105,68 +105,124 @@ export default function SessionsPage() {
       </div>
 
       {sessions.length > 0 ? (
-        <div className="bg-card rounded-lg border border-border overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">Session ID</th>
-                <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">Started</th>
-                <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">Duration</th>
-                <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">Status</th>
-                <th className="text-right text-sm font-medium text-muted-foreground px-4 py-3">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sessions.map((session) => (
-                <tr key={session.id} className="border-b border-border last:border-0">
-                  <td className="px-4 py-3 font-mono text-sm">{session.id.slice(0, 8)}...</td>
-                  <td className="px-4 py-3 text-sm text-muted-foreground">
-                    {new Date(session.started_at).toLocaleString()}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-muted-foreground">
-                    {session.duration_seconds ? formatDuration(session.duration_seconds) :
-                     session.status === 'active' ? 'ongoing' : '-'}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                      session.status === 'active' ? 'bg-green-500/10 text-green-400' : 'bg-muted text-muted-foreground'
-                    }`}>
-                      {session.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      {session.status === 'active' && (
+        <>
+          {/* Desktop table */}
+          <div className="hidden md:block bg-card rounded-lg border border-border overflow-hidden">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">Session ID</th>
+                  <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">Started</th>
+                  <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">Duration</th>
+                  <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">Status</th>
+                  <th className="text-right text-sm font-medium text-muted-foreground px-4 py-3">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sessions.map((session) => (
+                  <tr key={session.id} className="border-b border-border last:border-0">
+                    <td className="px-4 py-3 font-mono text-sm">{session.id.slice(0, 8)}...</td>
+                    <td className="px-4 py-3 text-sm text-muted-foreground">
+                      {new Date(session.started_at).toLocaleString()}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-muted-foreground">
+                      {session.duration_seconds ? formatDuration(session.duration_seconds) :
+                       session.status === 'active' ? 'ongoing' : '-'}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                        session.status === 'active' ? 'bg-green-500/10 text-green-400' : 'bg-muted text-muted-foreground'
+                      }`}>
+                        {session.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        {session.status === 'active' && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => showConfirm(
+                              'End session?',
+                              'The CLI will be disconnected from this session.',
+                              () => endSession(session.id)
+                            )}
+                          >
+                            End
+                          </Button>
+                        )}
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => showConfirm(
-                            'End session?',
-                            'The CLI will be disconnected from this session.',
-                            () => endSession(session.id)
+                            'Delete session?',
+                            'This will remove the session from your history.',
+                            () => deleteSession(session.id)
                           )}
                         >
-                          End
+                          Delete
                         </Button>
-                      )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile cards */}
+          <div className="md:hidden space-y-3">
+            {sessions.map((session) => (
+              <div key={session.id} className="bg-card rounded-lg border border-border p-4">
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <div className="font-mono text-sm mb-1">{session.id.slice(0, 12)}...</div>
+                    <div className="text-xs text-muted-foreground">
+                      {new Date(session.started_at).toLocaleString()}
+                    </div>
+                  </div>
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    session.status === 'active' ? 'bg-green-500/10 text-green-400' : 'bg-muted text-muted-foreground'
+                  }`}>
+                    {session.status}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-muted-foreground">
+                    {session.duration_seconds ? formatDuration(session.duration_seconds) :
+                     session.status === 'active' ? 'ongoing' : '-'}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {session.status === 'active' && (
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => showConfirm(
-                          'Delete session?',
-                          'This will remove the session from your history.',
-                          () => deleteSession(session.id)
+                          'End session?',
+                          'The CLI will be disconnected from this session.',
+                          () => endSession(session.id)
                         )}
                       >
-                        Delete
+                        End
                       </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => showConfirm(
+                        'Delete session?',
+                        'This will remove the session from your history.',
+                        () => deleteSession(session.id)
+                      )}
+                    >
+                      Delete
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       ) : (
         <div className="bg-card rounded-lg border border-border p-8 text-center">
           <p className="text-muted-foreground">No sessions yet. Start your first session with the CLI!</p>

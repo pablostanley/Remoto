@@ -115,38 +115,61 @@ export default async function DashboardPage() {
           </Link>
         </div>
         {recentSessions && recentSessions.length > 0 ? (
-          <div className="bg-card rounded-lg border border-border overflow-hidden">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">Session ID</th>
-                  <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">Started</th>
-                  <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">Duration</th>
-                  <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentSessions.map((session) => (
-                  <tr key={session.id} className="border-b border-border last:border-0">
-                    <td className="px-4 py-3 font-mono text-sm">{session.id}</td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">
-                      {new Date(session.started_at).toLocaleString()}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">
-                      {session.duration_seconds ? formatDuration(session.duration_seconds) : '-'}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                        session.status === 'active' ? 'bg-muted text-foreground' : 'bg-muted text-muted-foreground'
-                      }`}>
-                        {session.status}
-                      </span>
-                    </td>
+          <>
+            {/* Desktop table */}
+            <div className="hidden md:block bg-card rounded-lg border border-border overflow-hidden">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">Session ID</th>
+                    <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">Started</th>
+                    <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">Duration</th>
+                    <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {recentSessions.map((session) => (
+                    <tr key={session.id} className="border-b border-border last:border-0">
+                      <td className="px-4 py-3 font-mono text-sm">{session.id}</td>
+                      <td className="px-4 py-3 text-sm text-muted-foreground">
+                        {new Date(session.started_at).toLocaleString()}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-muted-foreground">
+                        {session.duration_seconds ? formatDuration(session.duration_seconds) : '-'}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                          session.status === 'active' ? 'bg-muted text-foreground' : 'bg-muted text-muted-foreground'
+                        }`}>
+                          {session.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile cards */}
+            <div className="md:hidden space-y-3">
+              {recentSessions.map((session) => (
+                <div key={session.id} className="bg-card rounded-lg border border-border p-4">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="font-mono text-sm">{session.id.slice(0, 12)}...</div>
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                      session.status === 'active' ? 'bg-muted text-foreground' : 'bg-muted text-muted-foreground'
+                    }`}>
+                      {session.status}
+                    </span>
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {new Date(session.started_at).toLocaleString()}
+                    {session.duration_seconds && ` · ${formatDuration(session.duration_seconds)}`}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         ) : (
           <div className="bg-card rounded-lg border border-border p-8 text-center">
             <p className="text-muted-foreground">No sessions yet. Start your first session!</p>

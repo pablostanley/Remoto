@@ -107,7 +107,7 @@ export default function DevicesPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-bold mb-2">Devices</h1>
           <p className="text-muted-foreground">
@@ -117,6 +117,7 @@ export default function DevicesPage() {
         {devices.length > 1 && (
           <Button
             variant="outline"
+            className="w-full sm:w-auto"
             onClick={() => showConfirm(
               'Log out all devices?',
               'All terminals will be disconnected. You\'ll need to run `npx remotosh` again to reconnect.',
@@ -129,54 +130,94 @@ export default function DevicesPage() {
       </div>
 
       {devices.length > 0 ? (
-        <div className="bg-card rounded-lg border border-border overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">Device</th>
-                <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">First login</th>
-                <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">Last used</th>
-                <th className="text-right text-sm font-medium text-muted-foreground px-4 py-3">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {devices.map((device) => (
-                <tr key={device.id} className="border-b border-border last:border-0">
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-muted rounded flex items-center justify-center">
-                        <Terminal size={16} className="text-muted-foreground" />
-                      </div>
-                      <div>
-                        <div className="font-medium">Terminal</div>
-                        <div className="text-sm text-muted-foreground font-mono">{getDevicePreview(device.token)}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-muted-foreground">
-                    {new Date(device.created_at).toLocaleDateString()}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-muted-foreground">
-                    {device.last_used_at ? getRelativeTime(device.last_used_at) : 'Never'}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => showConfirm(
-                        'Log out this device?',
-                        'The terminal will be disconnected. You\'ll need to run `npx remotosh` again to reconnect.',
-                        () => revokeDevice(device.id)
-                      )}
-                    >
-                      Log out
-                    </Button>
-                  </td>
+        <>
+          {/* Desktop table */}
+          <div className="hidden md:block bg-card rounded-lg border border-border overflow-hidden">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">Device</th>
+                  <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">First login</th>
+                  <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">Last used</th>
+                  <th className="text-right text-sm font-medium text-muted-foreground px-4 py-3">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {devices.map((device) => (
+                  <tr key={device.id} className="border-b border-border last:border-0">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-muted rounded flex items-center justify-center">
+                          <Terminal size={16} className="text-muted-foreground" />
+                        </div>
+                        <div>
+                          <div className="font-medium">Terminal</div>
+                          <div className="text-sm text-muted-foreground font-mono">{getDevicePreview(device.token)}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-muted-foreground">
+                      {new Date(device.created_at).toLocaleDateString()}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-muted-foreground">
+                      {device.last_used_at ? getRelativeTime(device.last_used_at) : 'Never'}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => showConfirm(
+                          'Log out this device?',
+                          'The terminal will be disconnected. You\'ll need to run `npx remotosh` again to reconnect.',
+                          () => revokeDevice(device.id)
+                        )}
+                      >
+                        Log out
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile cards */}
+          <div className="md:hidden space-y-3">
+            {devices.map((device) => (
+              <div key={device.id} className="bg-card rounded-lg border border-border p-4">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center">
+                      <Terminal size={20} className="text-muted-foreground" />
+                    </div>
+                    <div>
+                      <div className="font-medium">Terminal</div>
+                      <div className="text-xs text-muted-foreground font-mono">{getDevicePreview(device.token)}</div>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <div className="text-muted-foreground">
+                    <span>Added {new Date(device.created_at).toLocaleDateString()}</span>
+                    <span className="mx-2">·</span>
+                    <span>{device.last_used_at ? getRelativeTime(device.last_used_at) : 'Never used'}</span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => showConfirm(
+                      'Log out this device?',
+                      'The terminal will be disconnected. You\'ll need to run `npx remotosh` again to reconnect.',
+                      () => revokeDevice(device.id)
+                    )}
+                  >
+                    Log out
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       ) : (
         <div className="bg-card rounded-lg border border-border p-8 text-center">
           <p className="text-muted-foreground mb-2">No devices logged in yet</p>
