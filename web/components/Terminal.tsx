@@ -366,29 +366,38 @@ export default function Terminal({ onData, onResize, onReady }: TerminalProps) {
           {/* Plus button - opens unified drawer */}
           <button
             type="button"
-            onClick={() => setShowDrawer(true)}
+            onClick={() => {
+              inputRef.current?.blur();
+              setShowDrawer(true);
+            }}
             className="w-10 h-10 flex items-center justify-center bg-gray-800 hover:bg-gray-700 active:bg-gray-600 active:scale-95 transition-transform rounded-full text-gray-400 text-xl shrink-0"
           >
             +
           </button>
 
+          {/* Hidden field to trick password managers */}
+          <input type="text" name="fake-field" autoComplete="off" style={{ display: 'none' }} tabIndex={-1} />
+
           {/* Text input */}
           <textarea
             ref={inputRef}
-            name="terminal-command-input"
+            id="remoto-terminal-input"
+            name="remoto-terminal-input"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Type a message..."
             autoCapitalize="off"
             autoCorrect="off"
-            autoComplete="new-password"
+            autoComplete="off"
             spellCheck={false}
             inputMode="text"
-            enterKeyHint="done"
+            enterKeyHint="send"
             data-form-type="other"
             data-lpignore="true"
             data-1p-ignore="true"
+            data-bwignore="true"
+            data-protonpass-ignore="true"
             aria-autocomplete="none"
             rows={1}
             className="flex-1 bg-gray-900 text-white text-base px-4 py-3 rounded-2xl focus:outline-none focus:ring-2 focus:ring-gray-700 placeholder:text-gray-500 resize-none min-h-[48px] max-h-[120px]"
