@@ -104,7 +104,51 @@ function checkRateLimit(ip) {
   return true;
 }
 
-// Validate API key and get user ID
+// Validate CLI token and get user ID
+async function validateCliToken(token) {
+  // Check cache first (with TTL)
+  if (apiKeyCache.has(token)) {
+    const cached = apiKeyCache.get(token);
+    const age = Date.now() - cached.cachedAt;
+
+    if (age < API_KEY_CACHE_TTL_MS) {
+      return cached.userId;
+    }
+    apiKeyCache.delete(token);
+  }
+
+  if (!supabase) {
+    console.log('[DEV] Accepting token without validation');
+    return 'dev-user';
+  }
+
+  // Look up CLI token in database
+  const { data, error } = await supabase
+    .from('cli_tokens')
+    .select('user_id')
+    .eq('token', token)
+    .single();
+
+  if (error || !data) {
+    return null;
+  }
+
+  // Cache the result
+  apiKeyCache.set(token, {
+    userId: data.user_id,
+    cachedAt: Date.now(),
+  });
+
+  // Update last used
+  await supabase
+    .from('cli_tokens')
+    .update({ last_used_at: new Date().toISOString() })
+    .eq('token', token);
+
+  return data.user_id;
+}
+
+// Validate API key and get user ID (legacy support)
 async function validateApiKey(apiKey) {
   // Check cache first (with TTL)
   if (apiKeyCache.has(apiKey)) {
@@ -195,18 +239,25 @@ function countUserSessions(userId) {
 
 // Handle CLI connections
 async function handleCliConnection(ws, url) {
+  const token = url.searchParams.get('token');
   const apiKey = url.searchParams.get('apiKey');
 
-  // API key is REQUIRED - no anonymous sessions
-  if (!apiKey) {
-    ws.close(4001, 'API key required. Create one at https://remoto.sh/dashboard/api-keys');
+  // Need either token or API key
+  if (!token && !apiKey) {
+    ws.close(4001, 'Authentication required');
     return;
   }
 
-  // Validate API key
-  const userId = await validateApiKey(apiKey);
+  // Validate token or API key
+  let userId;
+  if (token && token.startsWith('cli_')) {
+    userId = await validateCliToken(token);
+  } else if (apiKey) {
+    userId = await validateApiKey(apiKey);
+  }
+
   if (!userId) {
-    ws.close(4002, 'Invalid API key');
+    ws.close(4002, 'Invalid credentials');
     return;
   }
 
