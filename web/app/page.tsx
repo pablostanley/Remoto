@@ -25,7 +25,7 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen p-8 md:p-16 max-w-2xl mx-auto">
+    <main className="min-h-screen p-5 md:p-16 max-w-2xl mx-auto">
       <nav className="flex items-center justify-between mb-16">
         <div className="flex items-center gap-2">
           <Image src="/logo.svg" alt="Remoto" width={28} height={28} />
@@ -68,7 +68,7 @@ export default function Home() {
               <span className="flex-shrink-0 w-6 h-6 rounded-full bg-muted flex items-center justify-center text-xs font-medium">1</span>
               <div className="space-y-2 flex-1">
                 <p className="text-sm">Run this command in your terminal</p>
-                <div className="bg-card border border-border rounded-lg p-4 font-mono text-sm flex items-center justify-between gap-2">
+                <div className="bg-card border border-border rounded-lg p-3 md:p-4 font-mono text-sm flex items-center justify-between gap-2">
                   <div>
                     <span className="text-muted-foreground select-none">$ </span>
                     <span className="text-foreground">npm install -g remotosh && remoto</span>

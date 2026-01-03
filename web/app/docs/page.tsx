@@ -79,7 +79,7 @@ export default function DocsPage() {
   }, []);
 
   return (
-    <main className="min-h-screen p-8 md:p-16 max-w-2xl mx-auto">
+    <main className="min-h-screen p-5 md:p-16 max-w-2xl mx-auto">
       <nav className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-2">
           <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
@@ -142,7 +142,7 @@ export default function DocsPage() {
         {/* How it works */}
         <section className="space-y-6">
           <h2 className="text-xl font-medium">How it works</h2>
-          <div className="bg-card border border-border rounded-lg p-6 space-y-4">
+          <div className="bg-card border border-border rounded-lg p-4 md:p-6 space-y-4">
             <p className="text-muted-foreground leading-relaxed">
               Remoto creates a secure tunnel between your terminal and your phone. When you run the CLI,
               it spawns a local shell session and connects to our relay server via WebSocket.
@@ -176,7 +176,7 @@ export default function DocsPage() {
               <span className="flex-shrink-0 w-6 h-6 rounded-full bg-muted flex items-center justify-center text-xs font-medium">1</span>
               <div className="space-y-2 flex-1">
                 <p className="text-sm font-medium">Install globally</p>
-                <code className="block bg-card border border-border rounded-lg p-4 font-mono text-sm">
+                <code className="block bg-card border border-border rounded-lg p-3 md:p-4 font-mono text-sm">
                   <span className="text-muted-foreground select-none">$ </span>npm install -g remotosh
                 </code>
               </div>
@@ -186,7 +186,7 @@ export default function DocsPage() {
               <span className="flex-shrink-0 w-6 h-6 rounded-full bg-muted flex items-center justify-center text-xs font-medium">2</span>
               <div className="space-y-2 flex-1">
                 <p className="text-sm font-medium">Start a session</p>
-                <code className="block bg-card border border-border rounded-lg p-4 font-mono text-sm">
+                <code className="block bg-card border border-border rounded-lg p-3 md:p-4 font-mono text-sm">
                   <span className="text-muted-foreground select-none">$ </span>remoto
                 </code>
               </div>
@@ -245,7 +245,7 @@ export default function DocsPage() {
           <h2 className="text-xl font-medium">Troubleshooting</h2>
 
           <div className="space-y-4">
-            <div className="bg-card border border-border rounded-lg p-6 space-y-3">
+            <div className="bg-card border border-border rounded-lg p-4 md:p-6 space-y-3">
               <h3 className="font-medium">posix_spawnp failed or spawn-helper errors</h3>
               <p className="text-sm text-muted-foreground">
                 This usually means node-pty needs to be rebuilt for your system. Install globally to fix:
@@ -255,7 +255,7 @@ export default function DocsPage() {
               </code>
             </div>
 
-            <div className="bg-card border border-border rounded-lg p-6 space-y-3">
+            <div className="bg-card border border-border rounded-lg p-4 md:p-6 space-y-3">
               <h3 className="font-medium">Session limit reached</h3>
               <p className="text-sm text-muted-foreground">
                 Free accounts can have up to 5 concurrent sessions. End existing sessions from the{" "}
@@ -263,7 +263,7 @@ export default function DocsPage() {
               </p>
             </div>
 
-            <div className="bg-card border border-border rounded-lg p-6 space-y-3">
+            <div className="bg-card border border-border rounded-lg p-4 md:p-6 space-y-3">
               <h3 className="font-medium">Run diagnostics</h3>
               <p className="text-sm text-muted-foreground">
                 Use the doctor command to check your setup:
@@ -278,7 +278,7 @@ export default function DocsPage() {
         {/* Security */}
         <section className="space-y-6">
           <h2 className="text-xl font-medium">Security</h2>
-          <div className="bg-card border border-border rounded-lg p-6 space-y-4">
+          <div className="bg-card border border-border rounded-lg p-4 md:p-6 space-y-4">
             <p className="text-muted-foreground leading-relaxed">
               Remoto is designed with security in mind:
             </p>
@@ -317,7 +317,7 @@ export default function DocsPage() {
 
 function CommandCard({ icon, command, description }: { icon: React.ReactNode; command: string; description: string }) {
   return (
-    <div className="bg-card border border-border rounded-lg p-4 flex items-start gap-4">
+    <div className="bg-card border border-border rounded-lg p-3 md:p-4 flex items-start gap-3 md:gap-4">
       <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-muted-foreground">
         {icon}
       </div>
