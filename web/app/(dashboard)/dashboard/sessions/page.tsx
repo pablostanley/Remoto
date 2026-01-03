@@ -71,17 +71,23 @@ export default function SessionsPage() {
   };
 
   const endSession = async (sessionId: string) => {
-    await supabase
-      .from('sessions')
-      .update({
-        status: 'ended',
-        ended_at: new Date().toISOString()
-      })
-      .eq('id', sessionId);
+    // Call API to kill session on server and update database
+    await fetch('/api/sessions/kill', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId }),
+    });
     loadSessions();
   };
 
   const deleteSession = async (sessionId: string) => {
+    // Kill session on server first (in case it's still active)
+    await fetch('/api/sessions/kill', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId }),
+    });
+    // Then delete from database
     await supabase
       .from('sessions')
       .delete()

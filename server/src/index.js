@@ -41,8 +41,61 @@ const apiKeyCache = new Map();
 // Map<ip, { count, windowStart }> for rate limiting
 const connectionRateLimit = new Map();
 
-// Create HTTP server for health checks
-const server = http.createServer((req, res) => {
+// Kill a session by ID
+function killSession(sessionId) {
+  const session = sessions.get(sessionId);
+  if (!session) {
+    return false;
+  }
+
+  console.log(`[API] Killing session: ${sessionId}`);
+
+  // Close CLI connection
+  if (session.cli && session.cli.readyState === WebSocket.OPEN) {
+    session.cli.close(1000, 'Session terminated by user');
+  }
+
+  // Close all phone connections
+  for (const phone of session.phones) {
+    if (phone.readyState === WebSocket.OPEN) {
+      phone.send(JSON.stringify({ type: 'session_killed' }));
+      phone.close(1000, 'Session terminated by user');
+    }
+  }
+
+  sessions.delete(sessionId);
+  return true;
+}
+
+// Parse JSON body from request
+function parseBody(req) {
+  return new Promise((resolve, reject) => {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      try {
+        resolve(JSON.parse(body));
+      } catch (e) {
+        reject(e);
+      }
+    });
+    req.on('error', reject);
+  });
+}
+
+// Create HTTP server for health checks and API
+const server = http.createServer(async (req, res) => {
+  // CORS headers for API endpoints
+  res.setHeader('Access-Control-Allow-Origin', ALLOWED_ORIGINS.join(', '));
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204);
+    res.end();
+    return;
+  }
+
   if (req.url === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({
@@ -50,10 +103,48 @@ const server = http.createServer((req, res) => {
       sessions: sessions.size,
       uptime: process.uptime()
     }));
-  } else {
-    res.writeHead(404);
-    res.end();
+    return;
   }
+
+  if (req.url === '/api/kill-session' && req.method === 'POST') {
+    try {
+      // Verify authorization
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        res.writeHead(401, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Unauthorized' }));
+        return;
+      }
+
+      const token = authHeader.slice(7);
+      if (token !== SUPABASE_SERVICE_KEY) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Forbidden' }));
+        return;
+      }
+
+      const body = await parseBody(req);
+      const { sessionId } = body;
+
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'sessionId required' }));
+        return;
+      }
+
+      const killed = killSession(sessionId);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, killed }));
+    } catch (err) {
+      console.error('[API] Error killing session:', err);
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Internal server error' }));
+    }
+    return;
+  }
+
+  res.writeHead(404);
+  res.end();
 });
 
 // Create WebSocket server with origin validation
