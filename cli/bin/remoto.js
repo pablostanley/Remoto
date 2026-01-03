@@ -350,7 +350,7 @@ async function main() {
       console.log(chalk.dim('  run `npx remotosh` to login\n'));
     } else if (code === 4004) {
       console.log(chalk.yellow('\n  session limit reached'));
-      console.log(chalk.dim('  free plan allows 2 concurrent sessions'));
+      console.log(chalk.dim('  free plan allows 5 concurrent sessions'));
       console.log(chalk.dim('  close an existing session and try again\n'));
     } else if (reasonStr.includes('expired')) {
       console.log(chalk.yellow('\n  session expired (1 hour limit)'));

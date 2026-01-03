@@ -18,7 +18,7 @@ const ALLOWED_ORIGINS = [
 ];
 
 // Session limits
-const MAX_CONCURRENT_SESSIONS = 2;
+const MAX_CONCURRENT_SESSIONS = 5;
 const MAX_SESSION_DURATION_MS = 60 * 60 * 1000; // 1 hour
 
 // Security limits
