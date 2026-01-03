@@ -164,7 +164,7 @@ let cols = process.stdout.columns || 80;
 let rows = process.stdout.rows || 24;
 
 // Version
-const VERSION = '1.3.3';
+const VERSION = '1.3.4';
 
 // Show help
 function showHelp() {
@@ -294,9 +294,19 @@ async function main() {
     case 'open':
       await openDashboard();
       process.exit(0);
+
+    case undefined:
+      // No command - start session (fall through)
+      break;
+
+    default:
+      // Unknown command
+      console.log(chalk.red(`\n  unknown command: ${command}\n`));
+      showHelp();
+      process.exit(1);
   }
 
-  // Default: start session
+  // Start session
   console.clear();
   console.log(chalk.bold.white('\n  remoto'));
   console.log(chalk.dim('  control your terminal from your phone\n'));

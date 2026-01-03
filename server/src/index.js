@@ -106,6 +106,52 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  if (req.url === '/api/kill-all-sessions' && req.method === 'POST') {
+    try {
+      // Verify authorization
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        res.writeHead(401, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Unauthorized' }));
+        return;
+      }
+
+      const token = authHeader.slice(7);
+      if (token !== SUPABASE_SERVICE_KEY) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Forbidden' }));
+        return;
+      }
+
+      const body = await parseBody(req);
+      const { userId } = body;
+
+      if (!userId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'userId required' }));
+        return;
+      }
+
+      // Find and kill all sessions for this user
+      let killed = 0;
+      for (const [sessionId, session] of sessions.entries()) {
+        if (session.userId === userId) {
+          killSession(sessionId);
+          killed++;
+        }
+      }
+
+      console.log(`[API] Killed ${killed} sessions for user: ${userId}`);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, killed }));
+    } catch (err) {
+      console.error('[API] Error killing all sessions:', err);
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Internal server error' }));
+    }
+    return;
+  }
+
   if (req.url === '/api/kill-session' && req.method === 'POST') {
     try {
       // Verify authorization
