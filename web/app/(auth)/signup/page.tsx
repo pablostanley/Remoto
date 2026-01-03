@@ -2,22 +2,24 @@
 
 export const dynamic = 'force-dynamic';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { TacoLogo } from '@/components/TacoLogo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { GithubLogo } from '@phosphor-icons/react';
 
-export default function SignupPage() {
+function SignupContent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const next = searchParams.get('next') || '/dashboard';
   const supabase = createClient();
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -36,15 +38,15 @@ export default function SignupPage() {
       return;
     }
 
-    // Go straight to dashboard (email confirmation disabled)
-    router.push('/dashboard');
+    // Go to next URL (email confirmation disabled)
+    router.push(next);
   };
 
   const handleGithubSignup = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'github',
       options: {
-        redirectTo: `${window.location.origin}/dashboard`,
+        redirectTo: `${window.location.origin}${next}`,
       },
     });
 
@@ -117,11 +119,28 @@ export default function SignupPage() {
 
         <p className="mt-6 text-center text-muted-foreground text-sm">
           Already have an account?{' '}
-          <Link href="/login" className="text-foreground hover:underline">
+          <Link href={next !== '/dashboard' ? `/login?next=${encodeURIComponent(next)}` : '/login'} className="text-foreground hover:underline">
             Sign in
           </Link>
         </p>
       </div>
     </main>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen flex items-center justify-center p-4">
+        <div className="w-full max-w-sm text-center">
+          <div className="flex justify-center mb-4">
+            <TacoLogo size={48} />
+          </div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </main>
+    }>
+      <SignupContent />
+    </Suspense>
   );
 }
