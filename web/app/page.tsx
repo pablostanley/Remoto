@@ -116,8 +116,12 @@ export default function Home() {
         </div>
       </div>
 
-      <footer className="mt-24 text-sm text-muted-foreground">
-        send feedback to <a href="https://x.com/pablostanley" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">pablo stanley</a>
+      <footer className="mt-24 text-sm text-muted-foreground flex flex-col gap-2">
+        <div>
+          <Link href="/docs" className="hover:text-foreground transition-colors">docs</Link>
+          <span className="mx-2">·</span>
+          <a href="https://x.com/pablostanley" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">feedback</a>
+        </div>
       </footer>
     </main>
   );
