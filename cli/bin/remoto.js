@@ -163,18 +163,143 @@ const shell = process.env.SHELL || (os.platform() === 'win32' ? 'powershell.exe'
 let cols = process.stdout.columns || 80;
 let rows = process.stdout.rows || 24;
 
+// Version
+const VERSION = '1.3.3';
+
+// Show help
+function showHelp() {
+  console.log(chalk.bold.white('\n  remoto') + chalk.dim(` v${VERSION}`));
+  console.log(chalk.dim('  control your terminal from your phone\n'));
+  console.log('  ' + chalk.bold('Usage:'));
+  console.log('    remoto              Start a new session');
+  console.log('    remoto status       Check login status');
+  console.log('    remoto logout       Log out and clear saved token');
+  console.log('    remoto doctor       Diagnose common issues');
+  console.log('    remoto open         Open dashboard in browser');
+  console.log('    remoto help         Show this help message');
+  console.log('    remoto --version    Show version\n');
+  console.log('  ' + chalk.bold('More info:'));
+  console.log(chalk.dim('    https://remoto.sh\n'));
+}
+
+// Show version
+function showVersion() {
+  console.log(`remotosh v${VERSION}`);
+}
+
+// Check status
+function showStatus() {
+  const config = loadConfig();
+  console.log(chalk.bold.white('\n  remoto status\n'));
+  if (config.token) {
+    console.log(chalk.green('  ✓ logged in'));
+    console.log(chalk.dim('    token saved in ~/.remoto/config.json\n'));
+  } else {
+    console.log(chalk.yellow('  ✗ not logged in'));
+    console.log(chalk.dim('    run `remoto` to log in\n'));
+  }
+}
+
+// Run diagnostics
+async function runDoctor() {
+  console.log(chalk.bold.white('\n  remoto doctor\n'));
+  let issues = 0;
+
+  // Check Node version
+  const nodeVersion = process.version;
+  const majorVersion = parseInt(nodeVersion.slice(1).split('.')[0], 10);
+  if (majorVersion >= 18) {
+    console.log(chalk.green(`  ✓ Node.js ${nodeVersion}`));
+  } else {
+    console.log(chalk.red(`  ✗ Node.js ${nodeVersion} (need v18+)`));
+    issues++;
+  }
+
+  // Check node-pty
+  try {
+    const ptyTest = pty.spawn(shell, [], { cols: 80, rows: 24 });
+    ptyTest.kill();
+    console.log(chalk.green('  ✓ node-pty working'));
+  } catch (err) {
+    console.log(chalk.red('  ✗ node-pty failed: ' + err.message));
+    console.log(chalk.dim('    try: npm uninstall -g remotosh && npm install -g remotosh'));
+    issues++;
+  }
+
+  // Check network connectivity
+  try {
+    const response = await fetch(`${WEB_APP_URL}`, { method: 'HEAD' });
+    if (response.ok) {
+      console.log(chalk.green('  ✓ network connectivity'));
+    } else {
+      console.log(chalk.yellow('  ? network: server returned ' + response.status));
+    }
+  } catch (err) {
+    console.log(chalk.red('  ✗ network: cannot reach remoto.sh'));
+    issues++;
+  }
+
+  // Check config
+  const config = loadConfig();
+  if (config.token) {
+    console.log(chalk.green('  ✓ logged in'));
+  } else {
+    console.log(chalk.yellow('  ○ not logged in (run `remoto` to log in)'));
+  }
+
+  console.log('');
+  if (issues === 0) {
+    console.log(chalk.green('  all good!\n'));
+  } else {
+    console.log(chalk.yellow(`  found ${issues} issue${issues > 1 ? 's' : ''}\n`));
+  }
+}
+
+// Open dashboard in browser
+async function openDashboard() {
+  console.log(chalk.dim('\n  opening dashboard...\n'));
+  await openBrowser(`${WEB_APP_URL}/dashboard`);
+}
+
 // Main
 async function main() {
+  const command = process.argv[2];
+
+  // Handle commands
+  switch (command) {
+    case 'help':
+    case '--help':
+    case '-h':
+      showHelp();
+      process.exit(0);
+
+    case '--version':
+    case '-v':
+      showVersion();
+      process.exit(0);
+
+    case 'status':
+      showStatus();
+      process.exit(0);
+
+    case 'logout':
+      saveConfig({});
+      console.log(chalk.green('\n  logged out successfully\n'));
+      process.exit(0);
+
+    case 'doctor':
+      await runDoctor();
+      process.exit(0);
+
+    case 'open':
+      await openDashboard();
+      process.exit(0);
+  }
+
+  // Default: start session
   console.clear();
   console.log(chalk.bold.white('\n  remoto'));
   console.log(chalk.dim('  control your terminal from your phone\n'));
-
-  // Handle logout command
-  if (process.argv[2] === 'logout') {
-    saveConfig({});
-    console.log(chalk.green('  logged out successfully\n'));
-    process.exit(0);
-  }
 
   // Authenticate
   const token = await authenticate();
