@@ -5,11 +5,72 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
-import { ArrowLeft, Terminal, Command, Info, Heartbeat, ArrowSquareOut, SignOut } from "@phosphor-icons/react";
+import { ArrowLeft, Terminal, Command, Info, Heartbeat, ArrowSquareOut, SignOut, Copy, Check } from "@phosphor-icons/react";
+
+const DOCS_CONTENT = `# Remoto Documentation
+
+## How it works
+
+Remoto creates a secure tunnel between your terminal and your phone. When you run the CLI, it spawns a local shell session and connects to our relay server via WebSocket.
+
+Scanning the QR code opens a web-based terminal on your phone that connects to the same session. Everything you type on your phone is sent to your local terminal, and all output is streamed back in real-time.
+
+- Sessions expire after 1 hour
+- Up to 5 concurrent sessions on free plan
+- Sensitive environment variables are filtered out
+
+## Getting started
+
+1. Install globally
+   $ npm install -g remotosh
+
+2. Start a session
+   $ remoto
+
+3. Scan the QR code with your phone
+
+## CLI commands
+
+- remoto: Start a new terminal session and display the QR code
+- remoto status: Check if you're logged in
+- remoto doctor: Run diagnostics to check Node.js version, network connectivity, and node-pty
+- remoto open: Open the Remoto dashboard in your browser
+- remoto logout: Clear saved authentication token
+- remoto help: Show all available commands
+
+## Troubleshooting
+
+### posix_spawnp failed or spawn-helper errors
+This usually means node-pty needs to be rebuilt for your system. Install globally to fix:
+$ npm install -g remotosh
+
+### Session limit reached
+Free accounts can have up to 5 concurrent sessions. End existing sessions from the dashboard or press Ctrl+C in active terminal sessions.
+
+### Run diagnostics
+Use the doctor command to check your setup:
+$ remoto doctor
+
+## Security
+
+Remoto is designed with security in mind:
+- Sessions require two tokens: one from authentication, one from session creation
+- Sensitive environment variables (API keys, secrets, tokens) are automatically filtered
+- All connections use TLS encryption
+- Sessions expire automatically after 1 hour
+- Terminal output is streamed but not stored on our servers
+`;
 
 export default function DocsPage() {
   const [user, setUser] = useState<{ email?: string } | null>(null);
+  const [copied, setCopied] = useState(false);
   const supabase = createClient();
+
+  const handleCopyDocs = async () => {
+    await navigator.clipboard.writeText(DOCS_CONTENT);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -19,7 +80,7 @@ export default function DocsPage() {
 
   return (
     <main className="min-h-screen p-8 md:p-16 max-w-2xl mx-auto">
-      <nav className="flex items-center justify-between mb-16">
+      <nav className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-2">
           <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <Image src="/logo.svg" alt="Remoto" width={28} height={28} />
@@ -49,10 +110,29 @@ export default function DocsPage() {
       <div className="space-y-12">
         {/* Header */}
         <div className="space-y-4">
-          <Link href="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-            <ArrowLeft size={16} />
-            Back to home
-          </Link>
+          <div className="flex items-center justify-between">
+            <Link href="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <ArrowLeft size={16} />
+              Back to home
+            </Link>
+            <button
+              onClick={handleCopyDocs}
+              className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              title="Copy docs for LLM"
+            >
+              {copied ? (
+                <>
+                  <Check size={16} weight="bold" />
+                  Copied
+                </>
+              ) : (
+                <>
+                  <Copy size={16} />
+                  Copy page
+                </>
+              )}
+            </button>
+          </div>
           <h1 className="text-4xl font-medium tracking-tight">Documentation</h1>
           <p className="text-muted-foreground text-lg">
             Learn how to use Remoto to control your terminal from your phone.
