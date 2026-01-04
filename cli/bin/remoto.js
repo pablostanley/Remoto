@@ -159,12 +159,46 @@ async function authenticate() {
 // Detect shell
 const shell = process.env.SHELL || (os.platform() === 'win32' ? 'powershell.exe' : 'zsh');
 
+// Early check for node-pty native bindings
+function checkPtyAvailable() {
+  try {
+    const testPty = pty.spawn(shell, ['-c', 'exit 0'], {
+      cols: 80,
+      rows: 24,
+      cwd: os.homedir(),
+    });
+    testPty.kill();
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err };
+  }
+}
+
+function showPtyError(err) {
+  console.error(chalk.red(`\n  native module error: ${err.message}\n`));
+
+  if (err.message.includes('posix_spawnp') || err.message.includes('spawn-helper')) {
+    console.log(chalk.yellow('  node-pty needs to be rebuilt for your system.\n'));
+    console.log(chalk.white('  quick fix:\n'));
+    console.log(chalk.cyan('    npm uninstall -g remotosh && npm install -g remotosh\n'));
+    console.log(chalk.dim('  if that doesn\'t work, you may need build tools:'));
+    if (os.platform() === 'darwin') {
+      console.log(chalk.cyan('    xcode-select --install'));
+    } else if (os.platform() === 'linux') {
+      console.log(chalk.cyan('    sudo apt install build-essential  # debian/ubuntu'));
+    }
+    console.log(chalk.dim('\n  run `remoto doctor` for full diagnostics\n'));
+  } else {
+    console.log(chalk.dim('  run `remoto doctor` to diagnose the issue\n'));
+  }
+}
+
 // Terminal dimensions
 let cols = process.stdout.columns || 80;
 let rows = process.stdout.rows || 24;
 
 // Version
-const VERSION = '1.3.4';
+const VERSION = '1.3.5';
 
 // Show help
 function showHelp() {
@@ -215,15 +249,34 @@ async function runDoctor() {
     issues++;
   }
 
+  // Check platform/architecture
+  console.log(chalk.green(`  ✓ platform: ${os.platform()} ${os.arch()}`));
+
+  // Check shell
+  console.log(chalk.green(`  ✓ shell: ${shell}`));
+
   // Check node-pty
-  try {
-    const ptyTest = pty.spawn(shell, [], { cols: 80, rows: 24 });
-    ptyTest.kill();
+  const ptyCheck = checkPtyAvailable();
+  if (ptyCheck.ok) {
     console.log(chalk.green('  ✓ node-pty working'));
-  } catch (err) {
-    console.log(chalk.red('  ✗ node-pty failed: ' + err.message));
-    console.log(chalk.dim('    try: npm uninstall -g remotosh && npm install -g remotosh'));
+  } else {
+    const errMsg = ptyCheck.error.message;
+    console.log(chalk.red('  ✗ node-pty failed: ' + errMsg));
     issues++;
+
+    // Provide specific fix based on error
+    if (errMsg.includes('posix_spawnp') || errMsg.includes('spawn-helper')) {
+      console.log(chalk.dim('    └─ native module not built for your system'));
+      console.log(chalk.dim('    fix: npm uninstall -g remotosh && npm install -g remotosh'));
+      if (os.platform() === 'darwin') {
+        console.log(chalk.dim('    if that fails: xcode-select --install'));
+      } else if (os.platform() === 'linux') {
+        console.log(chalk.dim('    if that fails: sudo apt install build-essential'));
+      }
+    } else if (errMsg.includes('ENOENT')) {
+      console.log(chalk.dim(`    └─ shell "${shell}" not found`));
+      console.log(chalk.dim('    check your SHELL environment variable'));
+    }
   }
 
   // Check network connectivity
@@ -310,6 +363,13 @@ async function main() {
   console.clear();
   console.log(chalk.bold.white('\n  remoto'));
   console.log(chalk.dim('  control your terminal from your phone\n'));
+
+  // Check node-pty before doing anything else
+  const ptyCheck = checkPtyAvailable();
+  if (!ptyCheck.ok) {
+    showPtyError(ptyCheck.error);
+    process.exit(1);
+  }
 
   // Authenticate
   const token = await authenticate();
@@ -427,6 +487,8 @@ async function main() {
       console.log(chalk.dim(`\n  ${connectionUrl}\n`));
       console.log(chalk.dim('  scan the qr code or open the link on your phone'));
       console.log(chalk.dim(`  session expires in ${durationMinutes} minutes`));
+      console.log(chalk.yellow('  ⚠ keep this qr code private - anyone with it can access your terminal'));
+      console.log(chalk.dim('  tip: press Cmd+K (mac) or Ctrl+L (linux) to clear the screen\n'));
       console.log(chalk.dim('  waiting for connection...\n'));
       console.log(chalk.dim('─'.repeat(Math.min(cols, 60))));
     });
@@ -443,8 +505,30 @@ async function main() {
         env: sanitizedEnv,
       });
     } catch (err) {
-      console.error(chalk.red(`  failed to start shell: ${err.message}`));
-      return;
+      console.error(chalk.red(`\n  failed to start shell: ${err.message}\n`));
+
+      // Provide helpful guidance for common errors
+      if (err.message.includes('posix_spawnp') || err.message.includes('spawn-helper')) {
+        console.log(chalk.yellow('  this usually means node-pty needs to be rebuilt for your system.\n'));
+        console.log(chalk.white('  try these fixes:\n'));
+        console.log(chalk.dim('    1. reinstall globally:'));
+        console.log(chalk.cyan('       npm uninstall -g remotosh && npm install -g remotosh\n'));
+        console.log(chalk.dim('    2. if that fails, install build tools first:'));
+        if (os.platform() === 'darwin') {
+          console.log(chalk.cyan('       xcode-select --install'));
+        } else if (os.platform() === 'linux') {
+          console.log(chalk.cyan('       sudo apt install build-essential  # debian/ubuntu'));
+          console.log(chalk.cyan('       sudo dnf groupinstall "Development Tools"  # fedora'));
+        }
+        console.log(chalk.dim('\n    3. then reinstall remotosh\n'));
+        console.log(chalk.dim('  run `remoto doctor` for more diagnostics\n'));
+      } else if (err.message.includes('ENOENT')) {
+        console.log(chalk.yellow(`  shell not found: ${shell}`));
+        console.log(chalk.dim('  check your SHELL environment variable\n'));
+      }
+
+      ws.close();
+      process.exit(1);
     }
 
     ptyProcess.onData((data) => {

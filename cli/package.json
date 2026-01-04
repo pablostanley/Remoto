@@ -1,6 +1,6 @@
 {
   "name": "remotosh",
-  "version": "1.3.4",
+  "version": "1.3.5",
   "description": "Control your terminal from your phone",
   "type": "module",
   "bin": {
